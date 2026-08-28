@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de acción · Automatización de Pago a Facturas · 30 días</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ============ SLIDESHOW ============ -->
+  <section class="slideshow" aria-roledescription="carrusel" aria-label="Imágenes de la iniciativa">
+    <div class="slideshow__frame">
+      <div class="slideshow__track" id="slideTrack">
+        <figure class="slide">
+          <img src="Images/e_a.png" alt="Imagen 1 de la iniciativa de Pago a Facturas" width="1920" height="768">
+        </figure>
+        <figure class="slide">
+          <img src="Images/e_b.jpeg" alt="Imagen 2 de la iniciativa de Pago a Facturas" width="1920" height="768">
+        </figure>
+      </div>
+
+      <button type="button" class="slidebtn slidebtn--prev" id="slidePrev" aria-label="Imagen anterior">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="slidebtn slidebtn--next" id="slideNext" aria-label="Imagen siguiente">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="slideshow__dots" id="slideDots" role="tablist" aria-label="Seleccionar imagen"></div>
+  </section>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="eyebrow">Business Partner · Plan de acción · Días 1–30 (tentativo)</div>
+    <div class="hero__grid">
+      <div>
+        <h1>De <span class="strike">opiniones</span><br>a <em>números</em>.</h1>
+        <p class="hero__lede">Treinta días para convertir <b>Pago a Facturas</b> en una recomendación ejecutiva defendible: mapear el proceso, identificar qué actividades son automatizables, cuantificar el ahorro y elegir la tecnología por criterios, no por marca.</p>
+        <p class="hero__premise">
+          <span class="hero__premise-l">Premisa del plan</span>
+          Automatizar el pago a proveedores no es el fin: es la vía. Un proceso automatizado produce datos limpios y conectados, y esos datos son los que hacen rentable la inversión ya hecha en <span class="term" data-tip="Ecosistema de datos y analítica de Google en la nube: Cortex, BigQuery y Looker.">Google Cloud</span>.
+        </p>
+      </div>
+      <div class="hero__meta">
+        <div class="metric">
+          <div class="metric__n">30</div>
+          <div class="metric__l">días estimados para llegar de diagnóstico a recomendación</div>
+        </div>
+        <div class="metric metric--red">
+          <div class="metric__n">1</div>
+          <div class="metric__l">iniciativa en foco: automatización del proceso de pago a proveedores</div>
+        </div>
+        <div class="metric">
+          <div class="metric__n">0</div>
+          <div class="metric__l">proveedores tecnológicos preseleccionados. La decisión sale de la matriz, no de la marca</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ GANTT ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <span class="sec__num">01</span>
+      <h2 class="sec__title">Cómo se distribuyen los 30 días</h2>
+      <span class="sec__note">Selecciona una fase para ver su detalle</span>
+    </div>
+
+    <div class="gantt">
+      <div class="ruler" id="ruler"></div>
+      <div id="ganttRows"></div>
+      <div class="gantt__legend">
+        <span><b>Las fases se traslapan a propósito.</b> Las entrevistas arrancan mientras sigue el levantamiento, y la evaluación tecnológica empieza antes de cerrar la cuantificación.</span>
+        <span class="gantt__caveat">Estimación tentativa · sujeta a disponibilidad de stakeholders y accesos a sistemas</span>
+      </div>
+    </div>
+
+    <div class="panel" id="panel"></div>
+  </section>
+
+  <!-- ============ CADENA DE VALOR ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <span class="sec__num">02</span>
+      <h2 class="sec__title">Una iniciativa, dos beneficios encadenados</h2>
+      <span class="sec__note">El proceso primero, el dato como consecuencia</span>
+    </div>
+
+    <div class="tracks">
+      <article class="track track--b">
+        <div class="track__kind">Beneficio directo</div>
+        <h3 class="track__name">Automatizar el proceso</h3>
+        <p class="track__intro">Menos toques manuales por factura, menos reprocesos y menos penalizaciones por pago tardío.</p>
+
+        <div class="track__block">
+          <div class="track__label">Qué busco en el proceso actual</div>
+          <div class="chips">
+            <span class="chip">Actividades manuales</span>
+            <span class="chip">Cuellos de botella</span>
+            <span class="chip">Reprocesos</span>
+            <span class="chip">Errores frecuentes</span>
+            <span class="chip">Pasos duplicados entre áreas</span>
+          </div>
+        </div>
+
+        <div class="track__block">
+          <div class="track__label">Qué mido para valorar</div>
+          <div class="chips">
+            <span class="chip">Facturas por mes</span>
+            <span class="chip">Tiempo promedio por factura</span>
+            <span class="chip">Horas hombre</span>
+            <span class="chip">Errores y retrabajos</span>
+            <span class="chip">Penalizaciones</span>
+          </div>
+        </div>
+
+        <div class="ask">
+          <b>Criterio para marcar una actividad como automatizable</b>
+          Que sea repetitiva, tenga reglas claras, use datos ya estructurados y su error hoy sea medible.
+        </div>
+      </article>
+
+      <article class="track track--a">
+        <div class="track__kind">Beneficio derivado</div>
+        <h3 class="track__name">Liberar el dato</h3>
+        <p class="track__intro">Al automatizar, el dato deja de capturarse a mano y empieza a fluir con estructura y trazabilidad hacia analítica.</p>
+
+        <div class="track__block">
+          <div class="track__label">Cadena de datos objetivo</div>
+          <div class="chain-data">
+            <span class="cd"><span class="term" data-tip="Sistema donde hoy viven las órdenes de compra, recepciones y facturas del proceso.">SAP</span></span>
+            <span class="cd__arrow" aria-hidden="true">→</span>
+            <span class="cd"><span class="term" data-tip="Cortex Framework de Google Cloud: conectores y modelos preconstruidos que leen la información de SAP y la llevan a la nube sin desarrollar la extracción desde cero.">Cortex</span></span>
+            <span class="cd__arrow" aria-hidden="true">→</span>
+            <span class="cd"><span class="term" data-tip="Almacén de datos analítico de Google Cloud. Es donde la información queda consultable a gran escala.">BigQuery</span></span>
+            <span class="cd__arrow" aria-hidden="true">→</span>
+            <span class="cd cd--end"><span class="term" data-tip="Lenguaje de modelado de Looker. Define una sola vez las métricas y reglas de negocio para que todos los reportes usen la misma definición. Su nombre oficial es LookML.">LookML</span></span>
+          </div>
+          <p class="cd__note">Aprovecha la inversión ya existente en Google Cloud en lugar de construir una capa de reportes paralela.</p>
+        </div>
+
+        <div class="track__block">
+          <div class="track__label">Qué habilita para el negocio</div>
+          <div class="chips">
+            <span class="chip">Estado de facturas en tiempo real</span>
+            <span class="chip">Antigüedad de saldos por proveedor</span>
+            <span class="chip">Métricas de ciclo de pago</span>
+            <span class="chip">Definiciones únicas de negocio</span>
+          </div>
+        </div>
+
+        <div class="ask ask--blue">
+          <b>Por qué importa el orden</b>
+          Automatizar sin ordenar el dato deja el mismo reporte manual. Ordenar el dato sin automatizar deja el mismo trabajo manual.
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ SELECCIÓN TECNOLÓGICA ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <span class="sec__num">03</span>
+      <h2 class="sec__title">Selección tecnológica agnóstica</h2>
+      <span class="sec__note">La solución se elige al final, no al principio</span>
+    </div>
+
+    <p class="sec__lede">
+      El plan no parte de una marca. Se levantan los requerimientos del proceso, se evalúan las alternativas del mercado con los mismos criterios y se compara contra lo que ya está pagado y disponible en casa.
+    </p>
+
+    <div class="vendors">
+      <div class="vendor">
+        <div class="vendor__n">Alternativa A</div>
+        <div class="vendor__t">Ecosistema Google</div>
+        <div class="vendor__d">Ventaja de partida: la inversión ya existe y la cadena hacia analítica es directa.</div>
+      </div>
+      <div class="vendor">
+        <div class="vendor__n">Alternativa B</div>
+        <div class="vendor__t">Ecosistema Microsoft</div>
+        <div class="vendor__d">A evaluar por adopción interna y por la base instalada de herramientas de oficina.</div>
+      </div>
+      <div class="vendor">
+        <div class="vendor__n">Alternativa C</div>
+        <div class="vendor__t">Especialistas del proceso</div>
+        <div class="vendor__d">Plataformas dedicadas a cuentas por pagar, con capacidades listas para usar.</div>
+      </div>
+      <div class="vendor">
+        <div class="vendor__n">Alternativa D</div>
+        <div class="vendor__t">Capacidades nativas de SAP</div>
+        <div class="vendor__d">Lo que ya se puede activar sin comprar nada nuevo. Siempre es la línea base de comparación.</div>
+      </div>
+    </div>
+
+    <div class="criteria-note">
+      <b>Todas se califican con la misma vara:</b> encaje funcional con el proceso mapeado, esfuerzo de integración con SAP, costo total, tiempo a primer valor, madurez del soporte local y, sobre todo, qué tanto habilita la cadena de datos hacia analítica.
+    </div>
+  </section>
+
+  <!-- ============ MATRIX ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <span class="sec__num">04</span>
+      <h2 class="sec__title">Cómo se prioriza, antes de saber quién gana</h2>
+      <span class="sec__note">Criterios acordados en Fase 6</span>
+    </div>
+
+    <p class="sec__lede">
+      Cada alternativa y cada bloque de automatización reciben un score con los mismos pesos. El objetivo es que la recomendación sea neutral y auditable: si cambia la prioridad, se ve exactamente qué criterio la movió.
+    </p>
+
+    <div class="matrix" id="matrix"></div>
+  </section>
+
+  <!-- ============ ROADMAP ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <span class="sec__num">05</span>
+      <h2 class="sec__title">Roadmap propuesto</h2>
+      <span class="sec__note">Valor temprano primero, plataforma después</span>
+    </div>
+
+    <div class="road">
+      <div class="road__step">
+        <div class="road__n">FASE 1</div>
+        <div class="road__t">Quick Wins</div>
+        <div class="road__d">Quitar los pasos manuales de mayor volumen y menor complejidad. Retorno visible en semanas.</div>
+      </div>
+      <div class="road__step">
+        <div class="road__n">FASE 2</div>
+        <div class="road__t">Automatización del flujo</div>
+        <div class="road__d">Captura, validación y aprobación de facturas sobre la solución seleccionada.</div>
+      </div>
+      <div class="road__step">
+        <div class="road__n">FASE 3</div>
+        <div class="road__t">Cadena de datos</div>
+        <div class="road__d">Conectar el proceso ya automatizado hacia BigQuery y modelar las métricas en LookML.</div>
+      </div>
+      <div class="road__step">
+        <div class="road__n">FASE 4</div>
+        <div class="road__t">Optimización continua</div>
+        <div class="road__d">Medir el ciclo de pago con datos propios, ajustar reglas y ampliar cobertura.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING CHAIN ============ -->
+  <section class="sec">
+    <div class="sec__head">
+      <span class="sec__num">06</span>
+      <h2 class="sec__title">Qué existirá al día 30</h2>
+      <span class="sec__note">Entregable ejecutivo final</span>
+    </div>
+
+    <div class="chain">
+      <div class="link"><div class="link__n">01</div><div class="link__t">Problema de negocio identificado</div></div>
+      <div class="link"><div class="link__n">02</div><div class="link__t">Stakeholders alineados</div></div>
+      <div class="link"><div class="link__n">03</div><div class="link__t">Proceso AS-IS documentado</div></div>
+      <div class="link"><div class="link__n">04</div><div class="link__t">Actividades automatizables identificadas</div></div>
+      <div class="link"><div class="link__n">05</div><div class="link__t">Cuantificación económica</div></div>
+      <div class="link"><div class="link__n">06</div><div class="link__t">Alternativas tecnológicas evaluadas</div></div>
+      <div class="link"><div class="link__n">07</div><div class="link__t">Recomendación ejecutiva</div></div>
+      <div class="link"><div class="link__n">08</div><div class="link__t">Roadmap de implementación</div></div>
+    </div>
+
+    <div class="closing">
+      <p class="closing__q">La pregunta que cierra cada entrevista: ¿qué ocurre si no hacemos nada?</p>
+      <span class="closing__sig">Plan de trabajo inicial · Pago a Facturas</span>
+    </div>
+  </section>
+
+</div>
+
+<div class="tooltip" id="tooltip" role="tooltip" aria-hidden="true"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
