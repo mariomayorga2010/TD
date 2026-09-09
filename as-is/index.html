@@ -3,70 +3,266 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diagrama de flujo AS-IS · Solicitud y recepción de servicios</title>
+<title>Diagrama BPMN · 3 Capas en escalera · Solicitud, Abastecimientos y Egresos · Ferromex</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header class="topbar">
   <div class="topbar__title">
-    <span class="topbar__eyebrow">Proceso AS-IS</span>
-    <h1>Solicitud, recepción y pago de servicios</h1>
+    <span class="topbar__eyebrow">Proceso integrado · Vista de presentación en escalera · 3 capas</span>
+    <h1>Solicitud, Abastecimientos y Egresos</h1>
   </div>
-
   <div class="legend">
     <span class="legend__item"><i class="ico ico--task"></i>Tarea</span>
     <span class="legend__item"><i class="ico ico--decision"></i>Decisión</span>
     <span class="legend__item"><i class="ico ico--start"></i>Inicio / Fin</span>
     <span class="legend__item"><i class="ico ico--loop"></i>Retorno (No)</span>
+    <span class="legend__item"><i class="ico ico--link"></i>Conector entre capas</span>
+    <span class="legend__item"><i class="ico ico--pending"></i>Vista preliminar (Capa 2)</span>
   </div>
 </header>
 
-<div class="canvas-wrap">
-  <div class="canvas-scroll" id="canvasScroll">
-    <div class="canvas" id="canvas">
-      <svg class="canvas__svg" id="edges" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0,0 L10,5 L0,10 z" fill="#1E5FE0"></path>
-          </marker>
-          <marker id="arrowLoop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0,0 L10,5 L0,10 z" fill="#C24A3D"></path>
-          </marker>
-        </defs>
-      </svg>
-      <!-- lane labels, phase headers y nodos se inyectan por JS -->
-    </div>
-  </div>
-  <div class="canvas-hint">Desliza horizontalmente para recorrer el proceso completo →</div>
-</div>
+<nav class="layer-nav" aria-label="Ir a capa">
+  <a href="#layer1" class="layer-nav__btn" data-scroll-to="layer1">
+    <span class="layer-nav__num">1</span><span>Solicitud y recepción de servicios</span>
+  </a>
+  <a href="#layer2" class="layer-nav__btn is-pending" data-scroll-to="layer2">
+    <span class="layer-nav__num">2</span><span>Abastecimientos</span><span class="layer-nav__badge">Vista preliminar</span>
+  </a>
+  <a href="#layer3" class="layer-nav__btn" data-scroll-to="layer3">
+    <span class="layer-nav__num">3</span><span>Egresos</span>
+  </a>
+</nav>
 
-<section class="detail" id="detail" aria-live="polite">
-  <!-- panel de detalle del paso activo, inyectado por JS -->
-</section>
+<main class="layers-stack layers-stack--staircase">
 
-<footer class="controls">
-  <div class="controls__progress">
-    <div class="controls__labels">
-      <span id="phaseLabel">Fase 1 · Solicitud de compra</span>
-      <span id="stepLabel">Paso 1 de 28</span>
+  <!-- ============================================================
+       CAPA 1 · Solicitud, recepción y pago de servicios
+       Escalón 1 · sin corrimiento (offsetX = 0)
+       ============================================================ -->
+  <section class="layer-section" id="layer1">
+    <div class="layer-section__header">
+      <span class="layer-section__num">1</span>
+      <div>
+        <span class="layer-section__eyebrow">Capa 1 · Activa · Escalón 1</span>
+        <h2 class="layer-section__title">Solicitud, recepción y pago de servicios</h2>
+      </div>
     </div>
-    <div class="controls__bar"><div class="controls__bar-fill" id="barFill"></div></div>
-  </div>
-  <div class="controls__buttons">
-    <button type="button" id="btnRestart" class="btn btn--ghost">
-      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg>
-      <span>Empezar de nuevo</span>
-    </button>
-    <div class="controls__nav">
-      <button type="button" id="btnPrev" class="btn btn--outline">← Retroceder</button>
-      <button type="button" id="btnNext" class="btn btn--solid">Avanzar →</button>
+
+    <div class="canvas-wrap">
+      <div class="canvas-scroll" id="canvasScroll-layer1">
+        <div class="canvas" id="canvas-layer1">
+          <svg class="canvas__svg" id="edges-layer1" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow-layer1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#1E5FE0"></path>
+              </marker>
+              <marker id="arrowLoop-layer1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#C24A3D"></path>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+      </div>
+      <div class="canvas-hint">Desliza horizontalmente para recorrer el proceso completo →</div>
     </div>
-  </div>
-</footer>
+
+    <div class="flow-controls">
+      <div class="flow-controls__progress">
+        <div class="flow-controls__labels">
+          <span id="phaseLabel-layer1">Fase 1</span>
+          <span id="stepLabel-layer1">Paso 1 de 1</span>
+        </div>
+        <div class="flow-controls__bar"><div class="flow-controls__bar-fill" id="barFill-layer1"></div></div>
+      </div>
+      <div class="flow-controls__buttons">
+        <button type="button" id="btnRestart-layer1" class="btn btn--ghost">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg>
+          <span>Reiniciar</span>
+        </button>
+        <div class="flow-controls__nav">
+          <button type="button" id="btnPrev-layer1" class="btn btn--outline">← Retroceder</button>
+          <button type="button" id="btnNext-layer1" class="btn btn--solid">Avanzar →</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="detail" id="detail-layer1" aria-live="polite"></section>
+  </section>
+
+  <!-- ============================================================
+       CAPA 2 · Abastecimientos — vista preliminar en cajas BPMN
+       Escalón 2 · offsetX calculado en JS (alineado al punto donde
+       la Capa 1 entrega el expediente a Compras)
+       ============================================================ -->
+  <section class="layer-section layer-section--pending" id="layer2">
+    <div class="layer-section__header">
+      <span class="layer-section__num layer-section__num--pending">2</span>
+      <div>
+        <span class="layer-section__eyebrow">Capa 2 · Vista preliminar · Escalón 2</span>
+        <h2 class="layer-section__title">Abastecimientos</h2>
+      </div>
+    </div>
+    <p class="layer-section__caption">
+      Esta capa aún no ha sido levantada como diagrama BPMN independiente en el manual. Las cajas
+      mostradas a continuación reutilizan el mismo contenido ya documentado en la Capa 1 (carril
+      "Compras") y en la Capa 3 (puntos de consulta con Egresos) — presentado aquí en su propio
+      diagrama, con bordes punteados, en lo que se documenta formalmente como proceso independiente.
+    </p>
+
+    <div class="canvas-wrap">
+      <div class="canvas-scroll" id="canvasScroll-layer2">
+        <div class="canvas" id="canvas-layer2">
+          <svg class="canvas__svg" id="edges-layer2" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow-layer2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#B9790C"></path>
+              </marker>
+              <marker id="arrowLoop-layer2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#C24A3D"></path>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+      </div>
+      <div class="canvas-hint">Desliza horizontalmente para recorrer las actividades referenciadas →</div>
+    </div>
+
+    <div class="flow-controls">
+      <div class="flow-controls__progress">
+        <div class="flow-controls__labels">
+          <span id="phaseLabel-layer2">Fase 1</span>
+          <span id="stepLabel-layer2">Paso 1 de 1</span>
+        </div>
+        <div class="flow-controls__bar"><div class="flow-controls__bar-fill" id="barFill-layer2"></div></div>
+      </div>
+      <div class="flow-controls__buttons">
+        <button type="button" id="btnRestart-layer2" class="btn btn--ghost">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg>
+          <span>Reiniciar</span>
+        </button>
+        <div class="flow-controls__nav">
+          <button type="button" id="btnPrev-layer2" class="btn btn--outline">← Retroceder</button>
+          <button type="button" id="btnNext-layer2" class="btn btn--solid">Avanzar →</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="detail" id="detail-layer2" aria-live="polite"></section>
+  </section>
+
+  <!-- ============================================================
+       CAPA 3 · Egresos (5.1 Nacionales / 5.4 Extranjeros)
+       Escalón 3 · offsetX = ancho total de Capa 1 (arranca al
+       mismo nivel horizontal donde termina la Capa 1)
+       ============================================================ -->
+  <section class="layer-section" id="layer3">
+    <div class="layer-section__header">
+      <span class="layer-section__num">3</span>
+      <div>
+        <span class="layer-section__eyebrow">Capa 3 · Activa · Escalón 3</span>
+        <h2 class="layer-section__title">Egresos</h2>
+      </div>
+    </div>
+
+    <div class="proc-switch" id="procSwitch">
+      <button type="button" class="proc-switch__btn is-active" data-proc="nacionales">
+        <span class="proc-switch__code">5.1</span>
+        <span class="proc-switch__name">Pago a Proveedores Nacionales</span>
+      </button>
+      <button type="button" class="proc-switch__btn" data-proc="extranjeros">
+        <span class="proc-switch__code">5.4</span>
+        <span class="proc-switch__name">Pago a Proveedores Extranjeros</span>
+      </button>
+    </div>
+
+    <!-- Sub-proceso 5.1 Nacionales -->
+    <div class="proc-block" data-proc-block="nacionales">
+      <div class="canvas-wrap">
+        <div class="canvas-scroll" id="canvasScroll-layer3-nacionales">
+          <div class="canvas" id="canvas-layer3-nacionales">
+            <svg class="canvas__svg" id="edges-layer3-nacionales" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow-layer3-nacionales" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#1E5FE0"></path>
+                </marker>
+                <marker id="arrowLoop-layer3-nacionales" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#C24A3D"></path>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </div>
+        <div class="canvas-hint">Este diagrama arranca alineado con el final de la Capa 1 (Escalón 3) · desliza para recorrerlo →</div>
+      </div>
+      <div class="flow-controls">
+        <div class="flow-controls__progress">
+          <div class="flow-controls__labels">
+            <span id="phaseLabel-layer3-nacionales">Fase 1</span>
+            <span id="stepLabel-layer3-nacionales">Paso 1 de 1</span>
+          </div>
+          <div class="flow-controls__bar"><div class="flow-controls__bar-fill" id="barFill-layer3-nacionales"></div></div>
+        </div>
+        <div class="flow-controls__buttons">
+          <button type="button" id="btnRestart-layer3-nacionales" class="btn btn--ghost">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg>
+            <span>Reiniciar</span>
+          </button>
+          <div class="flow-controls__nav">
+            <button type="button" id="btnPrev-layer3-nacionales" class="btn btn--outline">← Retroceder</button>
+            <button type="button" id="btnNext-layer3-nacionales" class="btn btn--solid">Avanzar →</button>
+          </div>
+        </div>
+      </div>
+      <section class="detail" id="detail-layer3-nacionales" aria-live="polite"></section>
+    </div>
+
+    <!-- Sub-proceso 5.4 Extranjeros -->
+    <div class="proc-block is-hidden" data-proc-block="extranjeros">
+      <div class="canvas-wrap">
+        <div class="canvas-scroll" id="canvasScroll-layer3-extranjeros">
+          <div class="canvas" id="canvas-layer3-extranjeros">
+            <svg class="canvas__svg" id="edges-layer3-extranjeros" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow-layer3-extranjeros" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#1E5FE0"></path>
+                </marker>
+                <marker id="arrowLoop-layer3-extranjeros" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#C24A3D"></path>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </div>
+        <div class="canvas-hint">Este diagrama arranca alineado con el final de la Capa 1 (Escalón 3) · desliza para recorrerlo →</div>
+      </div>
+      <div class="flow-controls">
+        <div class="flow-controls__progress">
+          <div class="flow-controls__labels">
+            <span id="phaseLabel-layer3-extranjeros">Fase 1</span>
+            <span id="stepLabel-layer3-extranjeros">Paso 1 de 1</span>
+          </div>
+          <div class="flow-controls__bar"><div class="flow-controls__bar-fill" id="barFill-layer3-extranjeros"></div></div>
+        </div>
+        <div class="flow-controls__buttons">
+          <button type="button" id="btnRestart-layer3-extranjeros" class="btn btn--ghost">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg>
+            <span>Reiniciar</span>
+          </button>
+          <div class="flow-controls__nav">
+            <button type="button" id="btnPrev-layer3-extranjeros" class="btn btn--outline">← Retroceder</button>
+            <button type="button" id="btnNext-layer3-extranjeros" class="btn btn--solid">Avanzar →</button>
+          </div>
+        </div>
+      </div>
+      <section class="detail" id="detail-layer3-extranjeros" aria-live="polite"></section>
+    </div>
+  </section>
+
+</main>
 
 <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
