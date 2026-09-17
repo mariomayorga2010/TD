@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAPEX Digital · Reporte dinámico | GMXT</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="script.js" defer></script>
+</head>
+<body>
+
+<!-- ============ ENCABEZADO ============ -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand__mark" aria-hidden="true"></span>
+    <div>
+      <h1>CAPEX Digital</h1>
+      <p class="brand__sub">Grupo México Transportes · Área Digital · cifras en miles de USD</p>
+    </div>
+  </div>
+  <p class="stamp" id="stamp" aria-live="polite">Cargando…</p>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ KPIs ============ -->
+  <section class="kpis" aria-label="Indicadores principales">
+    <article class="kpi">
+      <p class="kpi__label">Total CAPEX</p>
+      <p class="kpi__value" id="kpiTotal">–</p>
+      <p class="kpi__hint">miles de USD</p>
+    </article>
+    <article class="kpi">
+      <p class="kpi__label">Categoría principal</p>
+      <p class="kpi__value kpi__value--sm" id="kpiCat">–</p>
+      <p class="kpi__hint" id="kpiCatPct">–</p>
+    </article>
+    <article class="kpi">
+      <p class="kpi__label">Top empresa</p>
+      <p class="kpi__value" id="kpiEmp">–</p>
+      <p class="kpi__hint" id="kpiEmpVal">–</p>
+    </article>
+    <article class="kpi">
+      <p class="kpi__label">Proyectos</p>
+      <p class="kpi__value" id="kpiProy">–</p>
+      <p class="kpi__hint">en el filtro actual</p>
+    </article>
+  </section>
+
+  <!-- ============ FILTROS ============ -->
+  <section class="filters" aria-label="Filtros del reporte">
+    <div class="field">
+      <label for="fEmpresa">Empresa</label>
+      <select id="fEmpresa"><option value="ALL">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="fCategoria">Categoría</label>
+      <select id="fCategoria"><option value="ALL">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="fAnio">Año</label>
+      <select id="fAnio"><option value="ALL">Todos</option></select>
+    </div>
+    <div class="field field--grow">
+      <label for="fQuery">Buscar proyecto, responsable o gerencia</label>
+      <input type="search" id="fQuery" placeholder="Ej. SICALL, Coupa, Orozco…">
+    </div>
+    <div class="actions">
+      <button type="button" id="btnReset" class="btn btn--ghost">Limpiar</button>
+      <button type="button" id="btnExport" class="btn">Exportar CSV</button>
+    </div>
+  </section>
+
+  <!-- ============ MATRIZ ============ -->
+  <section class="card" aria-label="Matriz CAPEX por categoría y empresa">
+    <table class="matrix" role="table">
+      <caption class="sr-only">CAPEX Digital por categoría y empresa. Clic en una celda para ver el detalle.</caption>
+      <thead>
+        <tr>
+          <th scope="col" rowspan="2" class="th-desc">Descripción</th>
+          <th scope="colgroup" colspan="6" class="th-group">CAPEX DIGITAL</th>
+          <th scope="col" rowspan="2" class="th-year">Total año</th>
+        </tr>
+        <tr>
+          <th scope="col" class="emp emp--fxe">FXE</th>
+          <th scope="col" class="emp emp--fsrr">FSRR</th>
+          <th scope="col" class="emp emp--fec">FEC</th>
+          <th scope="col" class="emp emp--imex">IMEX</th>
+          <th scope="col" class="emp emp--txpc">TXPC</th>
+          <th scope="col" class="emp emp--cgr">CGR</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"><!-- generado por JS --></tbody>
+    </table>
+    <p class="hint">Haz clic (o Enter) sobre una celda con importe para desglosar los proyectos que la componen.</p>
+  </section>
+
+  <!-- ============ GRÁFICA ============ -->
+  <section class="card card--chart" aria-label="Distribución del CAPEX por empresa y categoría">
+    <h2>Distribución por empresa y categoría</h2>
+    <div class="chart-box"><canvas id="chart" role="img" aria-label="Gráfica de barras apiladas del CAPEX por empresa"></canvas></div>
+  </section>
+
+</main>
+
+<!-- ============ MODAL DRILL-DOWN ============ -->
+<div class="modal" id="drill" hidden role="dialog" aria-modal="true" aria-labelledby="drillTitle">
+  <div class="modal__panel">
+    <header class="modal__head">
+      <div>
+        <h2 id="drillTitle">Detalle</h2>
+        <p class="modal__meta" id="drillMeta"></p>
+      </div>
+      <button type="button" id="drillClose" class="btn btn--icon" aria-label="Cerrar detalle">✕</button>
+    </header>
+    <div class="modal__body">
+      <table class="detail">
+        <thead>
+          <tr><th>ID</th><th>Proyecto</th><th>Empresa</th><th>Responsable</th><th>Gerencia</th><th>Año</th><th class="num">kUSD</th></tr>
+        </thead>
+        <tbody id="drillBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
