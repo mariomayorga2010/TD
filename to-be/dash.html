@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo · Tablero de Capex y Opex con el Agente R2P</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F7FC; --card:#FFFFFF; --line:#E1E9F7; --ink:#0B2545; --soft:#5C7093;
+  --blue:#1E5FE0; --blue-dark:#123E99; --blue-pale:#E8F0FE;
+  --teal:#0F9E93; --teal-pale:#DEF4F1; --coral:#C24A3D; --coral-pale:#FBE7E4;
+  --amber:#B9790C; --amber-pale:#FCF1DC; --purple:#6D3FD1; --purple-pale:#EFE9FC;
+  --green:#1F8A4C; --green-pale:#E0F4E8; --grey:#B9C4D6;
+  --font:"Inter",sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.001ms!important;animation-duration:.001ms!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.45}
+.top{background:linear-gradient(135deg,#0B2545 0%,#123E99 70%,#1E5FE0 100%);color:#fff;padding:22px 24px 18px}
+.top__in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.top h1{margin:0;font-size:clamp(20px,2.6vw,28px);letter-spacing:-.015em}
+.top p{margin:4px 0 0;color:#DCE7FF;font-size:13.5px;max-width:760px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#BFD3FF}
+.demo-badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;background:#FCF1DC;color:#8A5A07;border:1.5px dashed #B9790C;border-radius:20px;padding:5px 12px;white-space:nowrap}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 24px 40px}
+.filters{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.fgroup{display:flex;flex-direction:column;gap:5px}
+.fgroup label,.fgroup .flabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font-family:var(--font);font-size:13px;font-weight:600;color:var(--soft);background:#fff;border:0;border-right:1px solid var(--line);padding:8px 14px;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--blue-pale);color:var(--blue-dark)}
+select{font-family:var(--font);font-size:13px;font-weight:600;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;min-width:190px}
+button:focus-visible,select:focus-visible,tr:focus-visible,.alert:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.fnote{margin-left:auto;font-size:12px;color:var(--soft);max-width:330px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;border-top:4px solid var(--c,var(--blue))}
+.kpi__lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}
+.kpi__val{font-family:var(--mono);font-size:24px;font-weight:700;margin:4px 0 2px;color:var(--ink)}
+.kpi__sub{font-size:11.5px;color:var(--soft)}
+.kpi__src{display:inline-block;margin-top:6px;font-family:var(--mono);font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--bg);color:var(--soft)}
+.kpi--r2p .kpi__src{background:var(--purple-pale);color:var(--purple)}
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.panel h2{margin:0 0 2px;font-size:15px}
+.panel .hint{margin:0 0 12px;font-size:12px;color:var(--soft)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--soft);margin:6px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.consumo{height:30px;display:flex;border-radius:8px;overflow:hidden;background:var(--bg);margin:6px 0 4px;position:relative}
+.consumo span{height:100%;display:block}
+.consumo__over{position:absolute;right:0;top:0;height:100%;background:repeating-linear-gradient(135deg,var(--coral) 0 6px,#E6A59D 6px 12px)}
+.scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--soft)}
+svg text{font-family:Inter,sans-serif}
+.chart{width:100%;height:auto;display:block}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:980px}
+th{background:var(--blue-pale);color:var(--blue-dark);text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:9px 10px;white-space:nowrap;cursor:pointer;user-select:none}
+th.num,td.num{text-align:right}
+th[aria-sort="descending"]::after{content:" ▼"}
+th[aria-sort="ascending"]::after{content:" ▲"}
+td{padding:9px 10px;border-top:1px solid var(--line);white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#F7FAFF}
+td.num{font-family:var(--mono)}
+.pill{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.pill--capex{background:var(--blue-pale);color:var(--blue-dark)}
+.pill--opex{background:var(--teal-pale);color:#0A6A62}
+.sem{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-weight:700}
+.sem i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.sem--ok i{background:var(--green)} .sem--warn i{background:var(--amber)} .sem--bad i{background:var(--coral)}
+.mini{display:inline-block;width:110px;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.mini b{display:block;height:100%}
+.alerts{display:flex;flex-direction:column;gap:8px;max-height:430px;overflow-y:auto}
+.alert{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-left:4px solid var(--c,var(--blue));border-radius:10px;padding:9px 11px;cursor:pointer;background:#fff}
+.alert:hover{background:#F7FAFF}
+.alert__tag{flex:none;font-family:var(--mono);font-size:9.5px;font-weight:700;color:#fff;background:var(--c,var(--blue));padding:2px 7px;border-radius:20px;margin-top:2px}
+.alert__body{font-size:12.5px}
+.alert__body b{display:block;font-size:12.5px}
+.alert__body span{color:var(--soft);font-size:11.5px}
+.empty{font-size:12.5px;color:var(--soft);padding:10px;background:var(--bg);border-radius:10px}
+.lineage{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.lin{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;font-size:12px}
+.lin b{display:block;font-size:12.5px;margin-bottom:3px}
+.lin span{color:var(--soft)}
+.lin em{display:inline-block;margin-top:6px;font-style:normal;font-family:var(--mono);font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--bg);color:var(--soft)}
+.note{margin-top:12px;border-left:3px solid var(--amber);background:var(--amber-pale);border-radius:0 9px 9px 0;padding:9px 13px;font-size:12.5px;color:var(--soft)}
+.note b{color:var(--ink)}
+/* Drawer */
+.overlay{position:fixed;inset:0;background:rgba(11,37,69,.38);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
+.overlay.is-open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(520px,100%);background:#fff;box-shadow:-12px 0 40px rgba(11,37,69,.25);transform:translateX(100%);transition:transform .2s ease;z-index:41;overflow-y:auto;padding:22px 22px 30px}
+.drawer.is-open{transform:none}
+.drawer__close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:16px;color:var(--soft)}
+.drawer h3{margin:4px 40px 4px 0;font-size:18px}
+.drawer .meta{font-size:12px;color:var(--soft);margin-bottom:12px}
+.dl{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:13px;margin:10px 0 14px}
+.dl dt{color:var(--soft)} .dl dd{margin:0;font-family:var(--mono);font-weight:600;text-align:right}
+.dl .tot{border-top:1px solid var(--line);padding-top:6px;font-weight:700}
+.sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 0 6px}
+.plist{margin:0;padding:0;list-style:none;font-size:12.5px}
+.plist li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.plist li span:last-child{font-family:var(--mono);font-weight:600}
+.foot{max-width:1280px;margin:0 auto;padding:0 24px 30px;font-family:var(--mono);font-size:11px;color:var(--soft);text-align:center}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.lineage{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.wrap,.top{padding-left:14px;padding-right:14px}.fnote{margin-left:0}.lineage{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top__in">
+    <div>
+      <span class="eyebrow">Agente R2P · BI y Gerencias · Dirección de Transformación Digital</span>
+      <h1>Tablero de Capex y Opex contra presupuesto</h1>
+      <p>Qué ve una gerencia cuando el pago a proveedores pasa por R2P: además de lo que SAP ya tiene registrado, aparecen las facturas en tránsito, los pagos recurrentes programados y una proyección de cierre.</p>
+    </div>
+    <span class="demo-badge">DEMO · DATOS FICTICIOS</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="filters" aria-label="Filtros">
+    <div class="fgroup"><span class="flabel" id="lblTipo">Tipo de gasto</span>
+      <div class="seg" id="fTipo" role="group" aria-labelledby="lblTipo">
+        <button type="button" data-v="Todos" aria-pressed="true">Todos</button>
+        <button type="button" data-v="Capex" aria-pressed="false">Capex</button>
+        <button type="button" data-v="Opex" aria-pressed="false">Opex</button>
+      </div>
+    </div>
+    <div class="fgroup"><label for="fGer">Gerencia</label><select id="fGer"></select></div>
+    <div class="fgroup"><label for="fMes">Corte al mes</label><select id="fMes"></select></div>
+    <p class="fnote">Cifras en millones de pesos (MXN M). Todas las cifras, nombres y códigos son ficticios: sirven solo para mostrar cómo se vería el tablero.</p>
+  </section>
+
+  <section class="kpis" id="kpis" aria-live="polite"></section>
+
+  <section class="grid2">
+    <div class="panel">
+      <h2>Consumo del presupuesto anual</h2>
+      <p class="hint">Real (registrado en SAP) + en tránsito (facturas que R2P ya recibió) + comprometido (pedidos y contratos abiertos).</p>
+      <div class="consumo" id="consumo" role="img" aria-label="Barra de consumo del presupuesto"></div>
+      <div class="scale"><span>0</span><span id="scaleMax"></span></div>
+      <div class="legend">
+        <span><i style="background:var(--blue)"></i>Real</span>
+        <span><i style="background:var(--purple)"></i>En tránsito (R2P)</span>
+        <span><i style="background:var(--grey)"></i>Comprometido</span>
+        <span><i style="background:var(--green-pale);border:1px solid var(--green)"></i>Disponible</span>
+        <span><i style="background:var(--coral)"></i>Exceso sobre presupuesto</span>
+      </div>
+      <h2 style="margin-top:18px">Avance acumulado del año</h2>
+      <p class="hint">Plan calendarizado contra real acumulado y proyección al cierre.</p>
+      <div id="chartAvance"></div>
+      <div class="legend">
+        <span><i style="background:#8EA0BF"></i>Plan acumulado</span>
+        <span><i style="background:var(--blue)"></i>Real acumulado</span>
+        <span><i style="background:var(--purple)"></i>Real + en tránsito al corte</span>
+        <span><i style="background:var(--amber)"></i>Proyección al cierre</span>
+        <span><i style="background:var(--coral)"></i>Presupuesto anual</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Alertas para la gerencia</h2>
+      <p class="hint">Generadas por R2P: presupuesto, contratos, pagos recurrentes y provisiones. Toca una alerta para ver el detalle.</p>
+      <div class="alerts" id="alerts" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <h2>Detalle por PEP (Capex) y centro de costo (Opex)</h2>
+      <p class="hint">Toca un encabezado para ordenar y una fila para ver su detalle.</p>
+      <div class="tblwrap">
+        <table>
+          <thead><tr id="thead">
+            <th data-k="imp" scope="col">Imputación</th>
+            <th data-k="nombre" scope="col">Nombre</th>
+            <th data-k="tipo" scope="col">Tipo</th>
+            <th data-k="presupuesto" class="num" scope="col">Presupuesto</th>
+            <th data-k="real" class="num" scope="col">Real</th>
+            <th data-k="transito" class="num" scope="col">En tránsito</th>
+            <th data-k="comprometido" class="num" scope="col">Comprometido</th>
+            <th data-k="disponible" class="num" scope="col">Disponible</th>
+            <th data-k="proyPct" class="num" scope="col" aria-sort="descending">Proyección</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Pagos recurrentes de los próximos 3 meses</h2>
+      <p class="hint">Lo que crean las alertas de la Fase 8: pagos programados de contratos y pagos pendientes de pedidos.</p>
+      <div id="chartPagos"></div>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>Contratos · pagos programados</span>
+        <span><i style="background:var(--blue)"></i>Pedidos · pagos pendientes</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>De dónde sale cada número</h2>
+    <p class="hint">El tablero no pide captura manual: se alimenta de SAP (solo lectura) y del expediente de R2P.</p>
+    <div class="lineage">
+      <div class="lin"><b>Presupuesto</b><span>Presupuesto anual por PEP y centro de costo.</span><br><em>SAP · lectura</em></div>
+      <div class="lin"><b>Real</b><span>MR aceptados y facturas registradas.</span><br><em>SAP · lectura</em></div>
+      <div class="lin"><b>En tránsito</b><span>Facturas que R2P recibió por correo y validó en SAP, aún sin registrar.</span><br><em>Expediente R2P</em></div>
+      <div class="lin"><b>Comprometido</b><span>Importe abierto de pedidos y contratos.</span><br><em>SAP · lectura</em></div>
+      <div class="lin"><b>Pagos recurrentes</b><span>Calendario de contratos y pagos pendientes de pedidos.</span><br><em>SAP + alertas R2P</em></div>
+    </div>
+    <div class="note"><b>Por qué cambia el control:</b> hoy una factura solo pesa en el presupuesto cuando se registra en SAP, semanas después de llegar. Con R2P se ve desde que llega el correo (“en tránsito”), y los pagos programados entran a la proyección antes de que ocurran. <b>Proyección al cierre</b> = real + en tránsito + gasto esperado del resto del año según el plan y el ritmo de cada imputación. Es un supuesto de diseño que se ajusta con Finanzas.</div>
+  </section>
+</main>
+<footer class="foot">Demo de tablero · Agente R2P · datos ficticios · agnóstico de la herramienta de BI</footer>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" aria-hidden="true">
+  <button type="button" class="drawer__close" id="dClose" aria-label="Cerrar">×</button>
+  <div id="dBody"></div>
+</aside>
+
+<script>
+(function(){
+"use strict";
+/* ================= DATOS FICTICIOS (generador determinista) ================= */
+const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const MESES_L = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const YEAR = 2026;
+function rng(seed){ let s = seed >>> 0; return function(){ s = (s*1664525 + 1013904223) >>> 0; return s/4294967296; }; }
+const CATALOGO = [
+  { imp:"PEP-DTD-26-01", nombre:"Renovación de red de patios",          tipo:"Capex", ger:"Infraestructura y redes",   B:38.0, f:1.06, perfil:"capex1" },
+  { imp:"PEP-DTD-26-02", nombre:"Centro de datos alterno",             tipo:"Capex", ger:"Infraestructura y redes",   B:52.0, f:0.92, perfil:"capex2" },
+  { imp:"PEP-DTD-26-03", nombre:"Plataforma de mantenimiento de vía",  tipo:"Capex", ger:"Aplicaciones y desarrollo", B:27.5, f:1.11, perfil:"capex1" },
+  { imp:"PEP-DTD-26-04", nombre:"Portal de proveedores (fase 2)",      tipo:"Capex", ger:"Aplicaciones y desarrollo", B:14.0, f:0.88, perfil:"capex2" },
+  { imp:"PEP-DTD-26-05", nombre:"Centro de operaciones de seguridad",  tipo:"Capex", ger:"Ciberseguridad",            B:21.0, f:0.99, perfil:"capex1" },
+  { imp:"PEP-DTD-26-06", nombre:"Lago de datos operativo",             tipo:"Capex", ger:"Datos y analítica",         B:18.5, f:1.02, perfil:"capex2" },
+  { imp:"CC-DTD-4101",   nombre:"Licenciamiento de software",          tipo:"Opex",  ger:"Aplicaciones y desarrollo", B:31.0, f:1.04, perfil:"opex", contrato:{ id:"CT-0412", vence:11, dia:10 } },
+  { imp:"CC-DTD-4102",   nombre:"Servicios de nube",                   tipo:"Opex",  ger:"Infraestructura y redes",   B:24.0, f:1.09, perfil:"opex", contrato:{ id:"CT-0388", vence:3,  dia:5 } },
+  { imp:"CC-DTD-4103",   nombre:"Enlaces y telecomunicaciones",        tipo:"Opex",  ger:"Infraestructura y redes",   B:19.0, f:0.97, perfil:"opex", contrato:{ id:"CT-0291", vence:12, dia:20 } },
+  { imp:"CC-DTD-4104",   nombre:"Mesa de servicio y soporte",          tipo:"Opex",  ger:"Aplicaciones y desarrollo", B:16.5, f:0.94, perfil:"opex", contrato:{ id:"CT-0455", vence:10, dia:15 } },
+  { imp:"CC-DTD-4105",   nombre:"Monitoreo y respuesta a incidentes",  tipo:"Opex",  ger:"Ciberseguridad",            B:12.0, f:1.01, perfil:"opex", contrato:{ id:"CT-0467", vence:14, dia:25 } },
+  { imp:"CC-DTD-4106",   nombre:"Consultoría de analítica",            tipo:"Opex",  ger:"Datos y analítica",         B:9.5,  f:0.86, perfil:"opex" }
+];
+const PERFILES = {
+  capex1:[2,3,5,7,9,11,12,12,11,10,10,8],
+  capex2:[4,5,6,8,8,9,9,10,10,11,10,10],
+  opex:  [8,8,8,8,8.5,8.5,8.5,8.5,8.5,8.5,8.5,8.5]
+};
+const ITEMS = CATALOGO.map((c,i)=>{
+  const r = rng(1009*(i+3));
+  const w = PERFILES[c.perfil], ws = w.reduce((a,b)=>a+b,0);
+  const plan = w.map(x=> c.B * x/ws);
+  const inv  = plan.map(p=> p * c.f * (0.86 + 0.28*r()));
+  return Object.assign({}, c, { plan:plan, inv:inv, sinMR: r() < 0.35 });
+});
+
+/* ================= CÁLCULO (puro) ================= */
+function calcItem(it, M){
+  const m = M-1; /* índice del mes de corte */
+  let real = 0; for(let k=0;k<m;k++) real += it.inv[k];
+  real += 0.45*it.inv[m];
+  const transito = 0.55*it.inv[m];
+  let comprometido = 0; for(let k=m+1;k<=Math.min(m+3,11);k++) comprometido += it.plan[k]*it.f*0.8;
+  let resto = 0; for(let k=m+1;k<12;k++) resto += it.plan[k]*it.f;
+  const proyeccion = real + transito + resto;
+  const disponible = it.B - real - transito - comprometido;
+  /* pagos recurrentes de los próximos 3 meses */
+  const pagos = [];
+  for(let k=m+1;k<=Math.min(m+3,11);k++){
+    const contrato = it.contrato && (k+1) <= it.contrato.vence ? it.plan[k]*it.f*0.7 : 0;
+    const pedido = it.tipo==="Capex" ? it.plan[k]*it.f*0.5 : (it.contrato ? 0 : it.plan[k]*it.f*0.5);
+    pagos.push({ mes:k+1, contrato:contrato, pedido:pedido });
+  }
+  let planAcum = 0; for(let k=0;k<=m;k++) planAcum += it.plan[k];
+  return { imp:it.imp, nombre:it.nombre, tipo:it.tipo, ger:it.ger, presupuesto:it.B, real:real, transito:transito,
+    comprometido:comprometido, disponible:disponible, proyeccion:proyeccion, proyPct: it.B>0 ? proyeccion/it.B*100 : 0,
+    consumoPct: it.B>0 ? (real+transito)/it.B*100 : 0, planAcum:planAcum, pagos:pagos, contrato:it.contrato||null, sinMR:it.sinMR, item:it };
+}
+function filtrar(f){
+  return ITEMS.filter(it => (f.tipo==="Todos" || it.tipo===f.tipo) && (f.ger==="Todas" || it.ger===f.ger));
+}
+function totales(rows){
+  const t = { presupuesto:0, real:0, transito:0, comprometido:0, disponible:0, proyeccion:0 };
+  rows.forEach(r=>{ Object.keys(t).forEach(k=> t[k] += r[k]); });
+  t.proyPct = t.presupuesto>0 ? t.proyeccion/t.presupuesto*100 : 0;
+  t.consumoPct = t.presupuesto>0 ? (t.real+t.transito)/t.presupuesto*100 : 0;
+  return t;
+}
+function serieMensual(items, M){
+  const plan = new Array(12).fill(0), real = new Array(12).fill(0), proy = new Array(12).fill(0);
+  items.forEach(it=>{ for(let k=0;k<12;k++){ plan[k]+=it.plan[k]; real[k]+=it.inv[k]; proy[k]+=it.plan[k]*it.f; } });
+  const cumPlan=[], cumReal=[], cumProy=[]; let a=0,b=0;
+  for(let k=0;k<12;k++){ a+=plan[k]; cumPlan.push(a); }
+  for(let k=0;k<M-1;k++){ b+=real[k]; cumReal.push(b); }
+  cumReal.push(b + 0.45*real[M-1]);
+  const conTransito = b + real[M-1];
+  let c = conTransito; cumProy.push(c);
+  for(let k=M;k<12;k++){ c += proy[k]; cumProy.push(c); }
+  return { cumPlan:cumPlan, cumReal:cumReal, conTransito:conTransito, cumProy:cumProy };
+}
+function semaforo(p){ return p > 100 ? "bad" : p >= 95 ? "warn" : "ok"; }
+function alertas(rows, M){
+  const out = [];
+  rows.forEach(r=>{
+    if(r.proyPct > 100) out.push({ prio:1, tipo:"Presupuesto", c:"var(--coral)", imp:r.imp, t:`${r.imp} proyecta ${fmtPct(r.proyPct)} del presupuesto`, d:`Sobreejercicio estimado de ${fmtM(r.proyeccion - r.presupuesto)} al cierre. Revisar alcance o solicitar ampliación.` });
+    else if(r.proyPct >= 95) out.push({ prio:2, tipo:"Presupuesto", c:"var(--amber)", imp:r.imp, t:`${r.imp} cerca del límite (${fmtPct(r.proyPct)})`, d:`Disponible de ${fmtM(r.disponible)} después de lo comprometido.` });
+    if(r.contrato){
+      const faltan = r.contrato.vence - M;
+      if(faltan <= 0) out.push({ prio:1, tipo:"Contrato", c:"var(--coral)", imp:r.imp, t:`Contrato ${r.contrato.id} vencido`, d:`Venció en ${mesLabel(r.contrato.vence)}. R2P retiene los pagos hasta regularizar.` });
+      else if(faltan <= 2) out.push({ prio:2, tipo:"Contrato", c:"var(--amber)", imp:r.imp, t:`Contrato ${r.contrato.id} vence en ${mesLabel(r.contrato.vence)}`, d:`Iniciar renovación con Compras: quedan ${faltan} ${faltan===1?"mes":"meses"}.` });
+      const prox = r.pagos.find(p=>p.contrato>0);
+      if(prox) out.push({ prio:3, tipo:"Pago recurrente", c:"var(--teal)", imp:r.imp, t:`Pago programado · ${r.contrato.id}`, d:`${fmtM(prox.contrato)} el ${r.contrato.dia} de ${MESES_L[prox.mes-1].toLowerCase()} (${r.nombre}).` });
+    }
+    if(r.tipo==="Capex" && r.pagos.length){
+      const p = r.pagos[0];
+      out.push({ prio:3, tipo:"Pago pendiente", c:"var(--blue)", imp:r.imp, t:`Pago pendiente de pedido · ${r.imp}`, d:`${fmtM(p.pedido)} esperado en ${MESES_L[p.mes-1].toLowerCase()} por entregas aún no recibidas.` });
+    }
+    if(r.sinMR && r.transito > 0.3) out.push({ prio:2, tipo:"Provisión", c:"var(--purple)", imp:r.imp, t:`Factura en tránsito sin MR · ${r.imp}`, d:`${fmtM(r.transito*0.4)} de servicio recibido sin MR: R2P propone provisión en borrador al cierre.` });
+  });
+  return out.sort((a,b)=> a.prio-b.prio || a.imp.localeCompare(b.imp));
+}
+
+/* ================= FORMATO ================= */
+const fmtM = (n)=> "$" + (Math.round(n*10)/10).toLocaleString("es-MX",{ minimumFractionDigits:1, maximumFractionDigits:1 }) + " M";
+const fmtPct = (n)=> (Math.round(n*10)/10).toLocaleString("es-MX",{ minimumFractionDigits:1, maximumFractionDigits:1 }) + " %";
+const mesLabel = (m)=> m>12 ? MESES[(m-1)%12] + " " + (YEAR+1) : MESES[m-1] + " " + YEAR;
+function niceMax(v){ if(!(v>0)) return { max:1, step:0.25 }; const raw=v/4, p=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/p; const step=(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; return { max:Math.ceil(v/step)*step, step:step }; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ================= RENDER ================= */
+const $ = (id)=> document.getElementById(id);
+const state = { tipo:"Todos", ger:"Todas", mes:9, sortK:"proyPct", sortDir:-1 };
+let ROWS = [];
+
+function renderKpis(t){
+  const s = semaforo(t.proyPct);
+  const col = s==="bad" ? "var(--coral)" : s==="warn" ? "var(--amber)" : "var(--green)";
+  const k = (lbl,val,sub,src,c,cls)=> '<div class="kpi '+(cls||"")+'" style="--c:'+c+'"><div class="kpi__lbl">'+lbl+'</div><div class="kpi__val">'+val+'</div><div class="kpi__sub">'+sub+'</div><span class="kpi__src">'+src+'</span></div>';
+  $("kpis").innerHTML =
+    k("Presupuesto anual", fmtM(t.presupuesto), "PEP y centros de costo filtrados", "SAP · LECTURA", "var(--ink)") +
+    k("Real", fmtM(t.real), fmtPct(t.presupuesto? t.real/t.presupuesto*100:0)+" del presupuesto", "SAP · LECTURA", "var(--blue)") +
+    k("En tránsito", fmtM(t.transito), "Facturas recibidas aún sin registrar", "EXPEDIENTE R2P", "var(--purple)", "kpi--r2p") +
+    k("Comprometido", fmtM(t.comprometido), "Pedidos y contratos abiertos", "SAP · LECTURA", "#8EA0BF") +
+    k("Disponible", fmtM(t.disponible), t.disponible<0 ? "Comprometido por encima del presupuesto" : "Después de lo comprometido", "CÁLCULO", t.disponible<0?"var(--coral)":"var(--green)") +
+    k("Proyección al cierre", fmtPct(t.proyPct), fmtM(t.proyeccion)+" estimados a diciembre", "CÁLCULO R2P", col);
+}
+function renderConsumo(t){
+  const base = Math.max(t.presupuesto, t.real+t.transito+t.comprometido, 0.0001);
+  const pct = (v)=> Math.max(0, v)/base*100;
+  const over = Math.max(0, t.real+t.transito+t.comprometido - t.presupuesto);
+  let h = '<span style="width:'+pct(t.real)+'%;background:var(--blue)" title="Real"></span>' +
+          '<span style="width:'+pct(t.transito)+'%;background:var(--purple)" title="En tránsito"></span>' +
+          '<span style="width:'+pct(t.comprometido - over)+'%;background:var(--grey)" title="Comprometido"></span>' +
+          '<span style="width:'+pct(Math.max(0,t.disponible))+'%;background:var(--green-pale)" title="Disponible"></span>';
+  if(over>0) h += '<span class="consumo__over" style="width:'+pct(over)+'%" title="Exceso"></span>';
+  $("consumo").innerHTML = h;
+  $("consumo").setAttribute("aria-label", "Real "+fmtM(t.real)+", en tránsito "+fmtM(t.transito)+", comprometido "+fmtM(t.comprometido)+", disponible "+fmtM(t.disponible));
+  $("scaleMax").textContent = fmtM(base) + (over>0 ? " (presupuesto " + fmtM(t.presupuesto) + ")" : "");
+}
+function renderAvance(items, t, M){
+  const S = serieMensual(items, M);
+  const W=720, H=270, L=58, R=18, T=16, B=34, w=W-L-R, h=H-T-B;
+  const NY = niceMax(Math.max(t.presupuesto, S.cumPlan[11], S.cumProy[S.cumProy.length-1]) * 1.12), maxY = NY.max;
+  const x = (m)=> L + (m-0.5)/12*w, y = (v)=> T + h - v/maxY*h;
+  let g = '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Avance acumulado del presupuesto">';
+  for(let v=0; v<=maxY+1e-9; v+=NY.step){ const yy=y(v); g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#E1E9F7"/><text x="'+(L-8)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10.5" fill="#5C7093">'+(Math.round(v*10)/10)+'</text>'; }
+  MESES.forEach((m,i)=>{ g += '<text x="'+x(i+1)+'" y="'+(H-12)+'" text-anchor="middle" font-size="10.5" fill="'+(i+1===M?"#0B2545":"#5C7093")+'" font-weight="'+(i+1===M?"700":"400")+'">'+m+'</text>'; });
+  g += '<line x1="'+x(M)+'" x2="'+x(M)+'" y1="'+T+'" y2="'+(T+h)+'" stroke="#0B2545" stroke-dasharray="3 3"/><text x="'+(x(M)+4)+'" y="'+(T+10)+'" font-size="10" fill="#0B2545">corte</text>';
+  g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(t.presupuesto)+'" y2="'+y(t.presupuesto)+'" stroke="#C24A3D" stroke-width="1.5"/><text x="'+(L+6)+'" y="'+(y(t.presupuesto)-6)+'" text-anchor="start" font-size="10.5" font-weight="600" fill="#C24A3D">Presupuesto '+fmtM(t.presupuesto)+'</text>';
+  const path = (arr, start)=> arr.map((v,i)=> (i===0?"M":"L")+x(start+i)+","+y(v)).join(" ");
+  g += '<path d="'+path(S.cumPlan,1)+'" fill="none" stroke="#8EA0BF" stroke-width="2" stroke-dasharray="6 4"/>';
+  const area = path(S.cumReal,1) + " L"+x(S.cumReal.length)+","+(T+h)+" L"+x(1)+","+(T+h)+" Z";
+  g += '<path d="'+area+'" fill="#1E5FE0" fill-opacity=".12"/><path d="'+path(S.cumReal,1)+'" fill="none" stroke="#1E5FE0" stroke-width="2.5"/>';
+  const over = S.cumProy[S.cumProy.length-1] > t.presupuesto;
+  g += '<path d="'+path(S.cumProy, M)+'" fill="none" stroke="'+(over?"#C24A3D":"#B9790C")+'" stroke-width="2.5" stroke-dasharray="5 4"/>';
+  g += '<circle cx="'+x(M)+'" cy="'+y(S.conTransito)+'" r="5" fill="#6D3FD1"/>';
+  g += '<circle cx="'+x(12)+'" cy="'+y(S.cumProy[S.cumProy.length-1])+'" r="4.5" fill="'+(over?"#C24A3D":"#B9790C")+'"/>';
+  const yP = y(S.cumProy[S.cumProy.length-1]), yPl = Math.abs(yP - y(t.presupuesto)) < 14 ? Math.min(yP, y(t.presupuesto)) - 18 : yP - 9;
+  g += '<text x="'+(x(12)-6)+'" y="'+Math.max(T+10, yPl)+'" text-anchor="end" font-size="11" font-weight="700" fill="'+(over?"#C24A3D":"#8A5A07")+'">'+fmtM(S.cumProy[S.cumProy.length-1])+'</text>';
+  g += '</svg>';
+  $("chartAvance").innerHTML = g;
+  return S;
+}
+function renderPagos(rows, M){
+  const meses = []; for(let k=M+1;k<=Math.min(M+3,12);k++) meses.push(k);
+  if(!meses.length){ $("chartPagos").innerHTML = '<p class="empty">Con corte en diciembre no hay meses siguientes en el año.</p>'; return []; }
+  const tot = meses.map(m=>({ mes:m, contrato:0, pedido:0 }));
+  rows.forEach(r=> r.pagos.forEach(p=>{ const t = tot.find(x=>x.mes===p.mes); if(t){ t.contrato+=p.contrato; t.pedido+=p.pedido; } }));
+  if(!tot.some(t=>t.contrato+t.pedido>0)){ $("chartPagos").innerHTML = '<p class="empty">Sin pagos programados ni pendientes en los próximos meses para este filtro.</p>'; return tot; }
+  const W=420, H=250, L=46, R=12, T=20, B=34, w=W-L-R, h=H-T-B;
+  const NY = niceMax(Math.max.apply(null, tot.map(t=>t.contrato+t.pedido)) * 1.18), maxY = NY.max;
+  const bw = Math.min(70, w/meses.length*0.55);
+  let g = '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Pagos recurrentes de los próximos meses">';
+  for(let v=0; v<=maxY+1e-9; v+=NY.step){ const yy=T+h-v/maxY*h; g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#E1E9F7"/><text x="'+(L-7)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10.5" fill="#5C7093">'+(Math.round(v*10)/10)+'</text>'; }
+  tot.forEach((t,i)=>{
+    const cx = L + (i+0.5)*w/tot.length, hc = t.contrato/maxY*h, hp = t.pedido/maxY*h;
+    g += '<rect x="'+(cx-bw/2)+'" y="'+(T+h-hc)+'" width="'+bw+'" height="'+hc+'" fill="#0F9E93" rx="3"/>';
+    g += '<rect x="'+(cx-bw/2)+'" y="'+(T+h-hc-hp)+'" width="'+bw+'" height="'+hp+'" fill="#1E5FE0" rx="3"/>';
+    g += '<text x="'+cx+'" y="'+(T+h-hc-hp-6)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#0B2545">'+fmtM(t.contrato+t.pedido)+'</text>';
+    g += '<text x="'+cx+'" y="'+(H-12)+'" text-anchor="middle" font-size="11" fill="#5C7093">'+mesLabel(t.mes)+'</text>';
+  });
+  g += '</svg>';
+  $("chartPagos").innerHTML = g;
+  return tot;
+}
+function renderTabla(rows){
+  const k = state.sortK, d = state.sortDir;
+  const sorted = rows.slice().sort((a,b)=>{ const va=a[k], vb=b[k]; return (typeof va==="string" ? va.localeCompare(vb) : va-vb) * d; });
+  $("tbody").innerHTML = sorted.map(r=>{
+    const s = semaforo(r.proyPct), bar = Math.min(100, r.consumoPct);
+    const bc = s==="bad" ? "var(--coral)" : s==="warn" ? "var(--amber)" : "var(--green)";
+    return '<tr tabindex="0" data-imp="'+esc(r.imp)+'"><td><b>'+esc(r.imp)+'</b></td><td>'+esc(r.nombre)+'</td><td><span class="pill pill--'+r.tipo.toLowerCase()+'">'+r.tipo+'</span></td>' +
+      '<td class="num">'+fmtM(r.presupuesto)+'</td><td class="num">'+fmtM(r.real)+'</td><td class="num">'+fmtM(r.transito)+'</td><td class="num">'+fmtM(r.comprometido)+'</td>' +
+      '<td class="num" style="color:'+(r.disponible<0?"var(--coral)":"inherit")+'">'+fmtM(r.disponible)+'</td>' +
+      '<td class="num"><span class="mini"><b style="width:'+bar+'%;background:'+bc+'"></b></span><span class="sem sem--'+s+'"><i></i>'+fmtPct(r.proyPct)+'</span></td></tr>';
+  }).join("") || '<tr><td colspan="9">Sin datos para el filtro.</td></tr>';
+  document.querySelectorAll("#thead th").forEach(th=>{
+    th.setAttribute("aria-sort", th.dataset.k===k ? (d<0?"descending":"ascending") : "none");
+  });
+  return sorted;
+}
+function renderAlertas(rows, M){
+  const a = alertas(rows, M);
+  $("alerts").innerHTML = a.length ? a.map(x=>'<div class="alert" tabindex="0" role="button" data-imp="'+esc(x.imp)+'" style="--c:'+x.c+'"><span class="alert__tag">'+esc(x.tipo)+'</span><div class="alert__body"><b>'+esc(x.t)+'</b><span>'+esc(x.d)+'</span></div></div>').join("")
+    : '<p class="empty">Sin alertas para este filtro.</p>';
+  return a;
+}
+function abrirDetalle(imp){
+  const r = ROWS.find(x=>x.imp===imp); if(!r) return;
+  const s = semaforo(r.proyPct);
+  let h = '<span class="pill pill--'+r.tipo.toLowerCase()+'">'+r.tipo+'</span><h3 id="dTitle">'+esc(r.imp)+' · '+esc(r.nombre)+'</h3>' +
+    '<div class="meta">'+esc(r.ger)+' · corte a '+MESES_L[state.mes-1].toLowerCase()+' de '+YEAR+(r.contrato?' · contrato '+r.contrato.id+' (vence '+mesLabel(r.contrato.vence)+')':'')+'</div>' +
+    '<dl class="dl"><dt>Presupuesto anual</dt><dd>'+fmtM(r.presupuesto)+'</dd>' +
+    '<dt>Real (SAP)</dt><dd>'+fmtM(r.real)+'</dd><dt>En tránsito (R2P)</dt><dd>'+fmtM(r.transito)+'</dd>' +
+    '<dt>Comprometido</dt><dd>'+fmtM(r.comprometido)+'</dd><dt class="tot">Disponible</dt><dd class="tot">'+fmtM(r.disponible)+'</dd>' +
+    '<dt>Proyección al cierre</dt><dd><span class="sem sem--'+s+'"><i></i>'+fmtM(r.proyeccion)+' · '+fmtPct(r.proyPct)+'</span></dd></dl>';
+  h += '<div class="sub">Pagos recurrentes próximos</div>';
+  const ps = r.pagos.filter(p=>p.contrato+p.pedido>0);
+  h += ps.length ? '<ul class="plist">'+ps.map(p=>'<li><span>'+mesLabel(p.mes)+(p.contrato?' · contrato '+(r.contrato?r.contrato.id:''):' · pedido pendiente')+'</span><span>'+fmtM(p.contrato+p.pedido)+'</span></li>').join("")+'</ul>' : '<p class="empty">Sin pagos programados en los próximos meses.</p>';
+  const al = alertas([r], state.mes);
+  h += '<div class="sub">Alertas</div>' + (al.length ? '<ul class="plist">'+al.map(x=>'<li><span>'+esc(x.t)+'</span><span>'+esc(x.tipo)+'</span></li>').join("")+'</ul>' : '<p class="empty">Sin alertas.</p>');
+  h += '<div class="sub">De dónde sale</div><p style="font-size:12px;color:var(--soft);margin:0">Real, comprometido y presupuesto: SAP en solo lectura. En tránsito y alertas: expediente de R2P. Datos ficticios.</p>';
+  $("dBody").innerHTML = h;
+  $("drawer").classList.add("is-open"); $("drawer").setAttribute("aria-hidden","false"); $("overlay").classList.add("is-open");
+}
+function cerrarDetalle(){ $("drawer").classList.remove("is-open"); $("drawer").setAttribute("aria-hidden","true"); $("overlay").classList.remove("is-open"); }
+
+function render(){
+  const items = filtrar(state);
+  ROWS = items.map(it=> calcItem(it, state.mes));
+  const t = totales(ROWS);
+  renderKpis(t); renderConsumo(t);
+  const serie = renderAvance(items, t, state.mes);
+  const pagos = renderPagos(ROWS, state.mes);
+  const tabla = renderTabla(ROWS);
+  const al = renderAlertas(ROWS, state.mes);
+  return { t:t, serie:serie, pagos:pagos, tabla:tabla, alertas:al };
+}
+
+/* ================= EVENTOS ================= */
+function init(){
+  const gers = ["Todas"].concat(Array.from(new Set(ITEMS.map(i=>i.ger))));
+  $("fGer").innerHTML = gers.map(g=>'<option value="'+esc(g)+'">'+(g==="Todas"?"Todas las gerencias":esc(g))+'</option>').join("");
+  $("fMes").innerHTML = MESES_L.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===state.mes?' selected':'')+'>'+m+' '+YEAR+'</option>').join("");
+  $("fMes").value = String(state.mes);
+  $("fTipo").addEventListener("click", (e)=>{
+    const b = e.target.closest("button"); if(!b) return;
+    state.tipo = b.dataset.v;
+    $("fTipo").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+    render();
+  });
+  $("fGer").addEventListener("change", ()=>{ state.ger = $("fGer").value; render(); });
+  $("fMes").addEventListener("change", ()=>{ state.mes = Math.min(12, Math.max(1, Number($("fMes").value)||9)); render(); });
+  $("thead").addEventListener("click", (e)=>{
+    const th = e.target.closest("th"); if(!th) return;
+    if(state.sortK===th.dataset.k) state.sortDir *= -1; else { state.sortK = th.dataset.k; state.sortDir = (th.classList.contains("num") ? -1 : 1); }
+    renderTabla(ROWS);
+  });
+  const openFrom = (e)=>{ const el = e.target.closest("[data-imp]"); if(el) abrirDetalle(el.dataset.imp); };
+  $("tbody").addEventListener("click", openFrom);
+  $("alerts").addEventListener("click", openFrom);
+  const key = (e)=>{ if(e.key==="Enter"||e.key===" "){ const el=e.target.closest("[data-imp]"); if(el){ e.preventDefault(); abrirDetalle(el.dataset.imp); } } };
+  $("tbody").addEventListener("keydown", key); $("alerts").addEventListener("keydown", key);
+  $("dClose").addEventListener("click", cerrarDetalle);
+  $("overlay").addEventListener("click", cerrarDetalle);
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") cerrarDetalle(); });
+  render();
+}
+init();
+window.__DASH = { ITEMS:ITEMS, calcItem:calcItem, filtrar:filtrar, totales:totales, serieMensual:serieMensual, alertas:alertas, render:render, state:state, abrirDetalle:abrirDetalle, cerrarDetalle:cerrarDetalle, getRows:()=>ROWS };
+})();
+</script>
+</body>
+</html>

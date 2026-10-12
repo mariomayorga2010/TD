@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente R2P · Del correo de la factura al pago a proveedores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --canvas-bg:#FBFDFF; --lane-a:#F4F8FE; --lane-b:#FFFFFF;
+  --lane-border:#E1E9F7; --line:#B9CCEF; --ink:#0B2545; --ink-soft:#5C7093;
+  --blue:#1E5FE0; --blue-dark:#123E99; --blue-pale:#E8F0FE; --blue-pale-2:#DCE9FD;
+  --teal:#0F9E93; --teal-pale:#DEF4F1; --coral:#C24A3D; --coral-pale:#FBE7E4;
+  --amber:#B9790C; --amber-pale:#FCF1DC;
+  --k-bot:#1E5FE0;   --k-bot-pale:#E8F0FE;
+  --k-agent:#6D3FD1; --k-agent-pale:#EFE9FC;
+  --k-human:#B9790C; --k-human-pale:#FCF1DC;
+  --k-sap:#3B4B6B;   --k-sap-pale:#E9EDF4;
+  --k-gmxt:#0B7A71;  --k-gmxt-pale:#DDF3F0;
+  --k-bi:#1F8A4C;    --k-bi-pale:#E0F4E8;
+  --k-ext:#5C7093;   --k-ext-pale:#EEF2F8;
+  --k-mail:#A04D8F;  --k-mail-pale:#F6E9F2;
+  --font:"Inter",sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5}
+.is-hidden{display:none!important}
+a{color:var(--blue-dark)}
+
+/* ---------- Hero ---------- */
+.hero{background:linear-gradient(135deg,#0B2545 0%,#123E99 62%,#1E5FE0 100%);color:#fff;padding:38px 24px 30px}
+.hero__in{max-width:1180px;margin:0 auto}
+.hero__eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#BFD3FF;margin-bottom:10px;display:block}
+.hero h1{margin:0 0 10px;font-size:clamp(24px,3.6vw,38px);font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.hero p{margin:0;max-width:880px;font-size:15.5px;color:#DCE7FF}
+.hero__facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.fact{font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff}
+.fact b{font-family:var(--mono);font-weight:700;color:#fff}
+
+/* ---------- Nav ---------- */
+.nav{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--lane-border)}
+.nav__in{max-width:1180px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:10px 24px}
+.nav a{white-space:nowrap;text-decoration:none;font-size:13px;font-weight:600;color:var(--ink-soft);padding:8px 13px;border-radius:9px;border:1.5px solid transparent}
+.nav a:hover{color:var(--blue-dark);background:var(--blue-pale)}
+.nav a.is-inview{color:var(--blue-dark);background:var(--blue-pale);border-color:var(--blue)}
+
+/* ---------- Sections ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.sec{padding:46px 0 50px;border-bottom:1px solid var(--lane-border);scroll-margin-top:52px}
+.sec:last-of-type{border-bottom:none}
+.sec__eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);display:block;margin-bottom:6px}
+.sec__title{margin:0 0 8px;font-size:clamp(21px,2.6vw,28px);font-weight:700;letter-spacing:-.015em}
+.sec__lead{margin:0 0 24px;max-width:880px;color:var(--ink-soft);font-size:15px}
+.sub{font-size:16px;font-weight:700;margin:30px 0 12px}
+.grid{display:grid;gap:14px}
+.grid--2{grid-template-columns:repeat(2,1fr)}
+.grid--3{grid-template-columns:repeat(3,1fr)}
+.grid--4{grid-template-columns:repeat(4,1fr)}
+.card{border:1px solid var(--lane-border);border-radius:14px;padding:18px 20px;background:var(--canvas-bg)}
+.card h3{margin:0 0 6px;font-size:15px}
+.card p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+.card--accent{border-left:4px solid var(--blue)}
+.card--coral{border-left:4px solid var(--coral)}
+.card--teal{border-left:4px solid var(--teal)}
+.card--amber{border-left:4px solid var(--amber)}
+.card--mail{border-left:4px solid var(--k-mail)}
+.card--demo{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:18px;border-left:4px solid var(--k-bi);background:var(--k-bi-pale)}
+.card--demo .btn{text-decoration:none}
+.stat{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--blue-dark);line-height:1.1}
+.note{margin-top:14px;border-left:3px solid var(--blue);background:var(--blue-pale);border-radius:0 9px 9px 0;padding:10px 14px;font-size:13px;color:var(--ink-soft)}
+.note--amber{border-left-color:var(--amber);background:var(--amber-pale)}
+.note--teal{border-left-color:var(--teal);background:var(--teal-pale)}
+.note--coral{border-left-color:var(--coral);background:var(--coral-pale)}
+.note b{color:var(--ink)}
+
+/* ---------- Tags / RW ---------- */
+.tag{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.tag--bot{background:var(--k-bot-pale);color:var(--k-bot)}
+.tag--agent{background:var(--k-agent-pale);color:var(--k-agent)}
+.tag--human{background:var(--k-human-pale);color:var(--k-human)}
+.tag--sap{background:var(--k-sap-pale);color:var(--k-sap)}
+.tag--gmxt{background:var(--k-gmxt-pale);color:var(--k-gmxt)}
+.tag--bi{background:var(--k-bi-pale);color:var(--k-bi)}
+.tag--ext{background:var(--k-ext-pale);color:var(--k-ext)}
+.tag--mail{background:var(--k-mail-pale);color:var(--k-mail)}
+.rw{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff;white-space:nowrap}
+.rw--L{background:#1E5FE0}.rw--E{background:#C24A3D}.rw--LE{background:linear-gradient(90deg,#1E5FE0 50%,#C24A3D 50%)}.rw--N{background:#8EA0BF}
+
+/* ---------- Tiempo: trabajo vs espera ---------- */
+.tbar{border:1px solid var(--lane-border);border-radius:14px;padding:14px 18px;background:#fff;margin-top:16px}
+.tbar__row{display:grid;grid-template-columns:210px 1fr 170px;gap:12px;align-items:center;margin:9px 0;font-size:13px}
+.tbar__lbl{color:var(--ink);font-weight:600}
+.tbar__track{height:18px;background:var(--lane-a);border-radius:9px;overflow:hidden;display:flex}
+.tbar__fill{height:100%}
+.tbar__fill--ok{background:var(--teal)}
+.tbar__fill--late{background:var(--coral)}
+.tbar__fill--range{background:repeating-linear-gradient(135deg,var(--coral) 0 6px,#E6A59D 6px 12px)}
+.tbar__fill--tiny{background:var(--blue);min-width:4px}
+.tbar__val{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+
+/* ---------- AS-IS / TO-BE ---------- */
+.cmp{border:1px solid var(--lane-border);border-radius:14px;overflow:hidden}
+.cmp__row{display:grid;grid-template-columns:44px 1fr 1.35fr 190px;gap:0;border-top:1px solid var(--lane-border);align-items:stretch}
+.cmp__row:first-child{border-top:none}
+.cmp__head{background:var(--blue-pale);font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-dark);font-weight:600}
+.cmp__cell{padding:12px 14px;font-size:13.5px}
+.cmp__num{display:flex;align-items:center;justify-content:center;background:var(--lane-a);font-family:var(--mono);font-weight:700;color:var(--blue-dark)}
+.cmp__asis{color:var(--ink-soft)}
+.cmp__tobe b{color:var(--ink)}
+.cmp__who{display:flex;flex-wrap:wrap;gap:6px;align-content:center}
+
+/* ---------- Phase bar ---------- */
+.pbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pchev{flex:1 1 120px;min-width:120px;padding:10px 16px 10px 22px;font-size:12px;font-weight:600;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%);color:var(--ink);text-align:center}
+.pchev small{display:block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.04em;margin-top:2px}
+.pchev--out{background:#EEF2F8;color:var(--ink-soft)}
+.pchev--alta{background:var(--teal-pale);color:#0A6A62}
+.pchev--parcial{background:var(--amber-pale);color:#8A5A07}
+.pchev--egr{background:var(--blue-pale);color:var(--blue-dark)}
+.pchev--new{background:var(--k-mail-pale);color:#7A3568}
+
+/* ---------- Architecture ---------- */
+.arch{border:1px solid var(--lane-border);border-radius:14px;background:var(--canvas-bg);overflow-x:auto}
+.arch svg{display:block;width:100%;min-width:1000px;height:auto}
+.a-box{fill:#fff;stroke:#B9CCEF;stroke-width:1.5}
+.a-box--plat{fill:#F7FAFF;stroke:#1E5FE0;stroke-dasharray:6 5}
+.a-box--bot{fill:var(--k-bot-pale);stroke:var(--k-bot)}
+.a-box--agent{fill:var(--k-agent-pale);stroke:var(--k-agent)}
+.a-box--human{fill:var(--k-human-pale);stroke:var(--k-human)}
+.a-box--sap{fill:var(--k-sap-pale);stroke:var(--k-sap)}
+.a-box--gmxt{fill:var(--k-gmxt-pale);stroke:var(--k-gmxt)}
+.a-box--bi{fill:var(--k-bi-pale);stroke:var(--k-bi)}
+.a-box--ext{fill:var(--k-ext-pale);stroke:var(--k-ext)}
+.a-box--mail{fill:var(--k-mail-pale);stroke:var(--k-mail)}
+.a-box--adapt{fill:#FFF8E8;stroke:#B9790C;stroke-width:2}
+.a-line{stroke:#123E99;stroke-width:2;fill:none}
+.a-txt{font-family:Inter,sans-serif;font-size:12px;line-height:1.35;color:#0B2545;padding:9px 12px;height:100%;display:flex;flex-direction:column;justify-content:center}
+.a-txt b{font-size:13px;font-weight:700;display:block;margin-bottom:2px}
+.a-txt span{color:#5C7093;font-size:11.5px}
+.a-txt--sm{font-size:11px;padding:4px 8px;justify-content:center;align-items:center;text-align:center;line-height:1.25;font-weight:600}
+.a-pill{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:700;color:#fff;border-radius:20px;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 4px;line-height:1.2}
+.a-pill--L{background:#1E5FE0}.a-pill--E{background:#C24A3D}.a-pill--N{background:#5C7093}
+.a-head{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1E5FE0;font-weight:600;padding:8px 12px}
+
+/* ---------- Tables ---------- */
+.tblwrap{overflow-x:auto;border:1px solid var(--lane-border);border-radius:14px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+.tbl th{background:var(--blue-pale);color:var(--blue-dark);text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;white-space:nowrap}
+.tbl td{padding:11px 12px;border-top:1px solid var(--lane-border);vertical-align:top;color:var(--ink-soft)}
+.tbl td:first-child{color:var(--ink);font-weight:600}
+.tbl td b{color:var(--ink)}
+.lvl{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.lvl--alta{background:var(--teal-pale);color:#0A6A62}
+.lvl--parcial{background:var(--amber-pale);color:#8A5A07}
+.lvl--fuera{background:#EEF2F8;color:var(--ink-soft)}
+.lvl--nuevo{background:var(--k-mail-pale);color:#7A3568}
+
+/* ---------- Flow (swimlane) ---------- */
+.ftabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.ftab{font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);background:#fff;border:1.5px solid var(--lane-border);border-radius:10px;padding:9px 15px;cursor:pointer}
+.ftab:hover{border-color:var(--blue);color:var(--blue-dark)}
+.ftab[aria-pressed="true"]{background:var(--blue-pale);border-color:var(--blue);color:var(--blue-dark)}
+.flowbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.flowbar__lbl{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:4px;text-transform:uppercase;letter-spacing:.06em}
+.fchip{font-family:var(--font);font-size:12px;font-weight:600;padding:6px 12px;border-radius:30px;border:1.5px solid var(--lane-border);background:#fff;color:var(--ink-soft);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.fchip:hover{border-color:var(--blue);color:var(--blue-dark)}
+.fchip[aria-pressed="true"]{background:var(--blue-pale);border-color:var(--blue);color:var(--blue-dark)}
+.fchip i{width:11px;height:11px;border-radius:3px;display:inline-block;background:var(--c,#999)}
+.canvas-wrap{padding:6px 0 4px}
+.canvas-scroll{overflow-x:auto;overflow-y:hidden;padding:0 0 6px;background:var(--canvas-bg);border-top:1px solid var(--lane-border);border-bottom:1px solid var(--lane-border)}
+.canvas{position:relative;min-width:max-content}
+.canvas__svg{position:absolute;top:0;left:0;z-index:1;pointer-events:none}
+.canvas-hint{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:center;padding:8px 0 0}
+.lane-band{position:absolute;left:0;z-index:0;border-top:1px solid var(--lane-border);border-bottom:1px solid var(--lane-border)}
+.lane-band--a{background:var(--lane-a)}.lane-band--b{background:var(--lane-b)}
+.lane-label{position:sticky;left:0;z-index:4;display:flex;flex-direction:column;justify-content:center;padding:8px 12px 8px 14px;background:linear-gradient(90deg,var(--bg) 84%,transparent);border-right:1px solid var(--lane-border);border-left:4px solid var(--lc,#999)}
+.lane-label__role{font-size:12px;font-weight:700;color:var(--ink);line-height:1.2}
+.lane-label__tag{font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;line-height:1.25}
+.phase-header{position:absolute;top:0;z-index:2;padding:7px 12px 0;border-left:1px dashed var(--line)}
+.phase-header__num{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.05em;text-transform:uppercase}
+.phase-header__name{font-size:12.5px;font-weight:600;color:var(--ink);margin-top:1px}
+.phase-divider{position:absolute;top:0;width:0;border-left:1px dashed var(--line);z-index:2}
+
+.node{position:absolute;z-index:3;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:transform .2s ease,filter .2s ease,opacity .2s ease;--kc:var(--k-ext);--kp:var(--k-ext-pale)}
+.node:hover{transform:translateY(-2px)}
+.node:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.node--k-bot{--kc:var(--k-bot);--kp:var(--k-bot-pale)}
+.node--k-agent{--kc:var(--k-agent);--kp:var(--k-agent-pale)}
+.node--k-human{--kc:var(--k-human);--kp:var(--k-human-pale)}
+.node--k-sap{--kc:var(--k-sap);--kp:var(--k-sap-pale)}
+.node--k-gmxt{--kc:var(--k-gmxt);--kp:var(--k-gmxt-pale)}
+.node--k-bi{--kc:var(--k-bi);--kp:var(--k-bi-pale)}
+.node--k-ext{--kc:var(--k-ext);--kp:var(--k-ext-pale)}
+.node--k-mail{--kc:var(--k-mail);--kp:var(--k-mail-pale)}
+.node__label{position:relative;z-index:1;font-size:11.6px;font-weight:600;line-height:1.26;color:var(--ink);padding:0 11px}
+.node--task{background:#fff;border:1.6px solid var(--kc);border-radius:9px;box-shadow:0 1px 3px rgba(11,37,69,.07)}
+.node--task::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--kc);border-radius:8px 8px 0 0}
+.node--task .node__label{margin-top:5px}
+.node--k-bi.node--task{background:var(--kp)}
+.node--decision{background:transparent}
+.node__shape{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.node__shape polygon{fill:var(--kp);stroke:var(--kc);stroke-width:1.8;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.node--decision .node__label{font-size:11px;margin-top:9px;padding:0 6px}
+.node__gateway{position:absolute;top:11px;left:50%;transform:translateX(-50%);color:var(--kc);opacity:.7;z-index:1}
+.node__gateway svg{width:10px;height:10px;display:block}
+.node--start,.node--end{border-radius:50%}
+.node--start{background:var(--kc);border:2px solid var(--ink)}
+.node--start .node__label,.node--end .node__label{color:#fff;font-size:10px;padding:0 6px}
+.node--end{background:var(--ink);border:4px solid var(--kc)}
+.node__icon{position:absolute;top:-9px;left:-9px;width:22px;height:22px;border-radius:50%;background:#fff;border:1.6px solid var(--kc);display:flex;align-items:center;justify-content:center;color:var(--kc);z-index:2}
+.node__icon svg{width:12px;height:12px}
+.node__acc{position:absolute;bottom:-9px;z-index:3;font-family:var(--mono);font-size:8.5px;font-weight:700;color:#fff;padding:1px 6px;border-radius:20px;border:1.5px solid #fff;white-space:nowrap}
+.node__acc--sap{right:-6px}
+.node__acc--gmxt{left:-6px}
+.node__acc--mail{bottom:auto;top:-9px;right:-6px;background:var(--k-mail)!important}
+.node--decision .node__acc{bottom:0}
+.node--decision .node__acc--mail{bottom:auto;top:0}
+.node__acc.rw--L{background:#1E5FE0}.node__acc.rw--E{background:#C24A3D}.node__acc.rw--LE{background:linear-gradient(90deg,#1E5FE0 50%,#C24A3D 50%)}
+.node__acc--gmxt.rw--L{background:#0B7A71}.node__acc--gmxt.rw--E{background:#0B7A71;box-shadow:inset 0 0 0 1.5px #C24A3D}.node__acc--gmxt.rw--LE{background:#0B7A71;box-shadow:inset 0 0 0 1.5px #C24A3D}
+.node.is-current{z-index:5}
+.node--task.is-current,.node--start.is-current,.node--end.is-current{box-shadow:0 0 0 5px var(--blue-pale-2),0 6px 18px rgba(30,95,224,.28)}
+.node--decision.is-current .node__shape{filter:drop-shadow(0 0 7px rgba(30,95,224,.55))}
+.node.is-done{opacity:.62}
+.node.is-flash{animation:flashPulse 1.4s ease;z-index:6}
+@keyframes flashPulse{0%{box-shadow:0 0 0 0 rgba(15,158,147,.65)}30%{box-shadow:0 0 0 10px rgba(15,158,147,.25)}100%{box-shadow:0 0 0 0 rgba(15,158,147,0)}}
+.edge-label{position:absolute;z-index:3;font-family:var(--mono);font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;background:#fff;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
+.edge-label--si{color:var(--teal);border:1px solid var(--teal)}
+.edge-label--no{color:var(--coral);border:1px solid var(--coral)}
+.edge-label--info{color:var(--k-bi);border:1px solid var(--k-bi)}
+.edge-label--loop{color:var(--amber);border:1px solid var(--amber)}
+.canvas:not([data-filter=""]) .node{opacity:.2}
+.canvas[data-filter="bot"] .node--k-bot,.canvas[data-filter="agent"] .node--k-agent,.canvas[data-filter="human"] .node--k-human,
+.canvas[data-filter="sap"] .node--k-sap,.canvas[data-filter="gmxt"] .node--k-gmxt,.canvas[data-filter="bi"] .node--k-bi,
+.canvas[data-filter="ext"] .node--k-ext,.canvas[data-filter="mail"] .node--k-mail,
+.canvas[data-filter="sapE"] .node[data-sap*="E"],.canvas[data-filter="sapL"] .node[data-sap*="L"]{opacity:1}
+
+/* ---------- Flow controls + detail ---------- */
+.flow-controls{max-width:940px;margin:14px auto 0;padding:14px 18px;background:var(--canvas-bg);border:1px solid var(--lane-border);border-radius:12px}
+.flow-controls__labels{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-bottom:6px}
+.flow-controls__labels span:first-child{color:var(--ink);font-weight:600}
+.flow-controls__bar{height:4px;background:var(--blue-pale);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.flow-controls__fill{height:100%;width:0;background:var(--blue);border-radius:4px;transition:width .35s ease}
+.flow-controls__buttons{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.flow-controls__nav{display:flex;gap:10px}
+.btn{font-family:var(--font);font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;transition:transform .15s ease,opacity .15s ease,background .15s ease}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible,.fchip:focus-visible,.ftab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn--solid{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn--solid:hover:not(:disabled){background:var(--blue-dark)}
+.btn--outline{background:transparent;color:var(--blue-dark);border-color:var(--blue)}
+.btn--outline:hover:not(:disabled){background:var(--blue-pale)}
+.btn--ghost{background:transparent;color:var(--ink-soft)}
+.btn--ghost:hover{color:var(--coral)}
+.detail{max-width:940px;margin:18px auto 0}
+.dcard{border:1px solid var(--lane-border);border-radius:14px;padding:20px 22px;background:var(--canvas-bg)}
+.dcard__kicker{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.pill{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;padding:2px 9px;border-radius:20px;background:var(--lane-a);color:var(--ink-soft);border:1px solid var(--lane-border)}
+.dcard__title{font-size:18px;font-weight:700;margin:0 0 6px;letter-spacing:-.01em}
+.dcard__desc{font-size:14px;color:var(--ink-soft);margin:0}
+.outcomes{margin-top:14px;display:grid;gap:8px}
+.outcome{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:9px;font-size:13px;line-height:1.5}
+.outcome__tag{flex:none;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff}
+.outcome--si{background:var(--teal-pale)}.outcome--si .outcome__tag{background:var(--teal)}
+.outcome--no{background:var(--coral-pale)}.outcome--no .outcome__tag{background:var(--coral)}
+.conn{margin-top:14px;border:1px solid var(--lane-border);border-radius:10px;background:#fff;overflow:hidden}
+.conn__row{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--lane-border)}
+.conn__row:first-child{border-top:none}
+.conn__sys{flex:none;width:92px;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);font-weight:700;padding-top:2px}
+.conn__row .rw{flex:none}
+.conn--none{padding:9px 12px;font-size:12.5px;color:var(--ink-soft);background:var(--lane-a)}
+.chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--blue);color:var(--blue-dark);background:var(--blue-pale);border-radius:6px}
+.bchip{font-family:var(--font);font-size:11.5px;font-weight:600;padding:4px 11px;border:1px solid var(--teal);color:#0A6A62;background:var(--teal-pale);border-radius:20px;cursor:pointer}
+.bchip:hover{background:#cdf0ea}
+.lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-top:14px;display:block}
+.callout{margin-top:12px;border-left:3px solid var(--blue);padding:8px 12px;font-size:12.5px;line-height:1.55;color:var(--ink-soft);background:var(--blue-pale);border-radius:0 8px 8px 0}
+.callout--guard{border-left-color:var(--k-agent);background:var(--k-agent-pale)}
+.callout--asis{border-left-color:var(--ink-soft);background:var(--lane-a)}
+.callout--assume{border-left-color:var(--amber);background:var(--amber-pale)}
+.callout b{color:var(--ink)}
+
+/* ---------- Benefits ---------- */
+.bcard{border:1px solid var(--lane-border);border-radius:14px;padding:18px 20px;background:#fff;scroll-margin-top:70px}
+.bcard.is-flash{animation:bflash 1.4s ease}
+@keyframes bflash{0%{box-shadow:0 0 0 0 rgba(15,158,147,.6)}30%{box-shadow:0 0 0 8px rgba(15,158,147,.25)}100%{box-shadow:0 0 0 0 rgba(15,158,147,0)}}
+.bcard__head{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.bcard__num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;font-family:var(--mono);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.bcard h3{margin:0;font-size:15.5px;line-height:1.25}
+.bcard dl{margin:0;font-size:13px}
+.bcard dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-top:10px}
+.bcard dd{margin:2px 0 0;color:var(--ink-soft)}
+.bcard__nodes{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.nodebtn{font-family:var(--font);font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer}
+.nodebtn:hover{border-color:var(--blue);color:var(--blue-dark);background:var(--blue-pale)}
+
+/* ---------- Estimador de impacto ---------- */
+.est__params{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.est__params--cycle{grid-template-columns:repeat(4,1fr);margin-top:18px}
+.field{display:flex;flex-direction:column;gap:5px;border:1px solid var(--lane-border);border-radius:12px;padding:12px 14px;background:#fff}
+.field label{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+.field small{font-size:11.5px;color:var(--ink-soft)}
+.field--given{border-left:4px solid var(--teal)}
+.field--assumed{border-left:4px solid var(--amber)}
+.num{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;width:100%;background:#fff}
+.num:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+.num--sm{width:92px;font-size:13px;padding:5px 8px}
+.est__tbl{min-width:900px}
+.est__tbl td{vertical-align:middle}
+.est__tbl td.calc{font-family:var(--mono);font-weight:600;color:var(--ink);white-space:nowrap}
+.est__tbl td.refcell{font-size:12px;color:var(--ink-soft);min-width:260px;line-height:1.4}
+.est__tbl tfoot td{background:var(--lane-a);font-weight:700;color:var(--ink);border-top:2px solid var(--line)}
+.est__res{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-top:16px}
+.res{border:1px solid var(--lane-border);border-radius:14px;padding:16px 18px;background:var(--teal-pale);border-left:4px solid var(--teal)}
+.res--cycle{background:var(--blue-pale);border-left-color:var(--blue)}
+.res--late{background:var(--coral-pale);border-left-color:var(--coral)}
+.res .stat{color:#0A6A62;font-size:26px}
+.res--cycle .stat{color:var(--blue-dark)}
+.res--late .stat{color:var(--coral)}
+.res h3{margin:4px 0 2px;font-size:13px}
+.res p{margin:0;font-size:12px;color:var(--ink-soft)}
+.est__actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.badge-assumed,.badge-given{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.badge-assumed{background:var(--amber-pale);color:#8A5A07;border:1px dashed var(--amber)}
+.badge-given{background:var(--teal-pale);color:#0A6A62}
+
+/* ---------- Roadmap / lists ---------- */
+.wave{border:1px solid var(--lane-border);border-radius:14px;padding:16px 18px;background:#fff;position:relative}
+.wave__n{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--blue);border-radius:20px;padding:2px 10px;display:inline-block;margin-bottom:8px}
+.wave h3{margin:0 0 6px;font-size:15px}
+.wave ul{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--ink-soft)}
+.wave li{margin:3px 0}
+.wave .rw{margin-top:8px}
+.list{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-soft)}
+.list li{margin:5px 0}
+.list b{color:var(--ink)}
+.src{font-size:12.5px;color:var(--ink-soft)}
+.src li{margin:4px 0}
+.foot{padding:26px 24px 44px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+
+/* ---------- Modal ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,37,69,.42);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;pointer-events:none;transition:opacity .18s ease}
+.modal-overlay.is-open{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:16px;max-width:540px;width:100%;max-height:86vh;overflow-y:auto;padding:24px 24px 22px;position:relative;box-shadow:0 20px 50px rgba(11,37,69,.28);transform:translateY(10px) scale(.98);transition:transform .18s ease}
+.modal-overlay.is-open .modal{transform:translateY(0) scale(1)}
+.modal__close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;border:1px solid var(--lane-border);background:var(--canvas-bg);color:var(--ink-soft);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.modal__close:hover{background:var(--coral-pale);color:var(--coral);border-color:var(--coral)}
+.modal .dcard{border:none;padding:0;background:transparent}
+.modal .dcard__kicker{margin-right:30px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .grid--3,.grid--4{grid-template-columns:repeat(2,1fr)}
+  .est__params{grid-template-columns:repeat(2,1fr)}
+  .est__params--cycle{grid-template-columns:repeat(2,1fr)}
+  .cmp__row{grid-template-columns:36px 1fr}
+  .cmp__row .cmp__tobe,.cmp__row .cmp__who{grid-column:2}
+  .cmp__head{display:none}
+  .tbar__row{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .hero{padding:28px 16px 24px}
+  .wrap{padding:0 16px}
+  .nav__in{padding:8px 16px}
+  .grid--2,.grid--3,.grid--4,.est__params,.est__params--cycle{grid-template-columns:1fr}
+  .flow-controls__nav{width:100%}
+  .flow-controls__nav .btn{flex:1;justify-content:center}
+}
+@media (max-width:480px){.btn--ghost span{display:none}}
+
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero__in">
+    <span class="hero__eyebrow">Propuesta de solución · Pago a proveedores</span>
+    <h1>Agente R2P: de la factura en el correo al pago, dentro del plazo de la política</h1>
+    <p>Un bot y un agente de IA que leen el buzón de facturas y SAP; validan en SAP si la factura corresponde a un pedido o a un contrato; preparan el expediente (o la carátula de agenda de pago), lo ingresan al Portal GMXT y solo involucran a personas para decidir y firmar. Diseño agnóstico de tecnología y desacoplado de SAP: sirve con el SAP de hoy (on-premise y nube privada, con RFC) y con el destino, S/4HANA Cloud Private Edition.</p>
+    <div class="hero__facts">
+      <span class="fact"><b>~300</b> transacciones de DTD en el año · <b>90 %</b> por pedido, <b>10 %</b> por contrato</span>
+      <span class="fact"><b>~10</b> personas en el proceso</span>
+      <span class="fact"><b>30 min</b> de trabajo por transacción</span>
+      <span class="fact"><b>40–50 días</b> a pago · política: <b>30</b> desde el ingreso al Portal</span>
+      <span class="fact">Portal GMXT <b>con API</b></span>
+    </div>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Secciones">
+  <div class="nav__in">
+    <a href="#resumen" data-spy="resumen">Resumen</a>
+    <a href="#arquitectura" data-spy="arquitectura">Arquitectura</a>
+    <a href="#flujo" data-spy="flujo">Flujo TO-BE</a>
+    <a href="#fases" data-spy="fases">Qué se automatiza</a>
+    <a href="#sap" data-spy="sap">SAP, Portal y correo</a>
+    <a href="#beneficios" data-spy="beneficios">Beneficios</a>
+    <a href="#impacto" data-spy="impacto">Impacto</a>
+    <a href="#gobierno" data-spy="gobierno">Gobierno y ruta</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================= 1. RESUMEN ================= -->
+<section class="sec" id="resumen">
+  <div class="wrap">
+    <span class="sec__eyebrow">1 · Resumen</span>
+    <h2 class="sec__title">El problema: 30 minutos de trabajo, 40 a 50 días de espera</h2>
+    <p class="sec__lead">Cada pago pasa por varias manos con correos, capturas y esperas entre pasos. La política da 30 días naturales para pagar desde que la factura se ingresa al Portal, y hoy se tardan de 40 a 50, es decir, de 10 a 20 días de atraso en promedio.</p>
+
+    <div class="grid grid--3">
+      <div class="card card--coral"><div class="stat">40–50 días</div><h3>Hasta el pago</h3><p>Contra 30 días naturales que da la política desde el ingreso al Portal. El atraso se acumula entre pasos, no dentro de ellos.</p></div>
+      <div class="card card--coral"><div class="stat">30 min</div><h3>De trabajo por transacción</h3><p>Es el trabajo manual medido por la DTD. Cerca de 10 personas participan en el proceso: recibir, validar, firma, MR, devolver, subir y agendar.</p></div>
+      <div class="card card--coral"><div class="stat">~300</div><h3>Transacciones en el año</h3><p>Solo en la Dirección de Transformación Digital: 90 % por pedido y 10 % por contrato. Una factura de más de 30 días sin MR termina en refacturación (Manual de Egresos MPDFIN-04, 5.11).</p></div>
+    </div>
+
+    <div class="tbar" role="img" aria-label="Comparación: plazo de política de 30 días, ciclo actual de 40 a 50 días y 30 minutos de trabajo manual">
+      <div class="tbar__row"><span class="tbar__lbl">Plazo de la política</span><div class="tbar__track"><div class="tbar__fill tbar__fill--ok" style="width:60%"></div></div><span class="tbar__val">30 días naturales</span></div>
+      <div class="tbar__row"><span class="tbar__lbl">Hoy: hasta el pago</span><div class="tbar__track"><div class="tbar__fill tbar__fill--late" style="width:80%"></div><div class="tbar__fill tbar__fill--range" style="width:20%"></div></div><span class="tbar__val">40 a 50 días</span></div>
+      <div class="tbar__row"><span class="tbar__lbl">Trabajo manual por transacción</span><div class="tbar__track"><div class="tbar__fill tbar__fill--tiny" style="width:0.1%"></div></div><span class="tbar__val">30 min · ≈ 0.05 % del ciclo</span></div>
+      <p style="margin:6px 0 0;font-family:var(--mono);font-size:11px;color:var(--ink-soft)">Escala: 50 días = 100 %. El trabajo manual casi no se ve.</p>
+    </div>
+    <div class="note note--coral"><b>Lectura clave:</b> acelerar la captura no basta. Si el trabajo es de 30 minutos y el ciclo de 40 a 50 días, casi todo el tiempo es espera: entre personas, correcciones, firmas pendientes y el corte semanal de Egresos. Por eso R2P mide todo el recorrido desde el correo, enruta, pre-valida y avisa, y vigila el plazo de 30 días desde el ingreso al Portal (el hito de la política). <i>Es una hipótesis: se confirma midiendo fechas por etapa en el piloto.</i></div>
+
+    <h3 class="sub">Hoy vs. con el Agente R2P</h3>
+    <div class="cmp" role="table" aria-label="Comparativo hoy contra propuesta">
+      <div class="cmp__row cmp__head"><div class="cmp__cell"></div><div class="cmp__cell">Hoy (manual)</div><div class="cmp__cell">Con el Agente R2P</div><div class="cmp__cell">Quién lo hace</div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">1</div><div class="cmp__cell cmp__asis">Se recibe la factura</div><div class="cmp__cell cmp__tobe"><b>R2P lee el correo del proveedor</b>, extrae los datos, valida en SAP si la factura corresponde a un pedido o a un contrato y registra la fecha de llegada.</div><div class="cmp__cell cmp__who"><span class="tag tag--mail">Correo</span><span class="tag tag--bot">Bot</span><span class="tag tag--sap">SAP</span></div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">2</div><div class="cmp__cell cmp__asis">Se valida</div><div class="cmp__cell cmp__tobe"><b>Pedido:</b> match triple, imputación y presupuesto. <b>Contrato:</b> vigencia, saldo y tarifa. El agente gestiona solo las discrepancias.</div><div class="cmp__cell cmp__who"><span class="tag tag--bot">Bot</span><span class="tag tag--agent">Agente IA</span></div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">3</div><div class="cmp__cell cmp__asis">Se pasa a firma</div><div class="cmp__cell cmp__tobe"><b>Paquete pre-validado y ruteado</b> al aprobador correcto, con recordatorios. El líder solo decide y firma.</div><div class="cmp__cell cmp__who"><span class="tag tag--agent">Agente IA</span><span class="tag tag--bot">Bot</span><span class="tag tag--human">Persona</span></div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">4</div><div class="cmp__cell cmp__asis">Se adjunta el MR</div><div class="cmp__cell cmp__tobe"><b>El bot crea el MR en borrador</b>, el usuario lo acepta y el bot anexa el folio (ruta por pedido).</div><div class="cmp__cell cmp__who"><span class="tag tag--bot">Bot</span><span class="tag tag--human">Persona</span></div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">5</div><div class="cmp__cell cmp__asis">Se devuelve al proveedor</div><div class="cmp__cell cmp__tobe"><b>Notificación automática</b> con el expediente firmado y seguimiento del acuse.</div><div class="cmp__cell cmp__who"><span class="tag tag--bot">Bot</span></div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">6</div><div class="cmp__cell cmp__asis">Se sube a la plataforma</div><div class="cmp__cell cmp__tobe"><b>Ingreso automático al Portal GMXT por API</b>: arranca el plazo de 30 días y se crean alertas de pagos recurrentes para pedidos con pagos pendientes y contratos con pagos programados.</div><div class="cmp__cell cmp__who"><span class="tag tag--bot">Bot</span><span class="tag tag--gmxt">Portal</span></div></div>
+      <div class="cmp__row"><div class="cmp__cell cmp__num">7</div><div class="cmp__cell cmp__asis">Se agenda el pago</div><div class="cmp__cell cmp__tobe"><b>Pedido:</b> Egresos recibe un expediente completo con la fecha límite calculada. <b>Contrato:</b> R2P crea la carátula de agenda de pago.</div><div class="cmp__cell cmp__who"><span class="tag tag--bot">Bot</span><span class="tag tag--human">Persona</span></div></div>
+    </div>
+
+    <h3 class="sub">Qué hace R2P cuando llega la factura</h3>
+    <div class="grid grid--3">
+      <div class="card card--accent"><h3>Con pedido · 90 %</h3><p>Ejecuta el proceso de <b>Solicitud y recepción de servicios</b> (Fases 3 a 8): conformidad, match triple, MR, constancia, firma, ingreso al Portal y entrega a Egresos.</p></div>
+      <div class="card card--teal"><h3>Con contrato · 10 %</h3><p><b>Valida el contrato</b> (vigencia, saldo, tarifa), revisa imputación y presupuesto y <b>crea la carátula de agenda de pago</b>. Si el contrato no es válido, alerta y retiene el pago.</p></div>
+      <div class="card card--mail"><h3>Sin referencia</h3><p>SAP no confirma pedido ni contrato: el agente pide la referencia al proveedor o al área solicitante, y el expediente se reanuda al recibir la respuesta.</p></div>
+    </div>
+
+    <h3 class="sub">Tu intuición, validada: dónde se automatiza</h3>
+    <p class="sec__lead" style="margin-bottom:10px">Las Fases 3 a 8 de “Solicitud y recepción de servicios” son automatizables. Además, hay dos tramos nuevos que hoy no existen como proceso: la <b>entrada por correo con validación en SAP</b> y la <b>ruta por contrato</b>. Las Fases 1 y 2 son de Abastecimientos y solo aportan datos.</p>
+    <div class="pbar">
+      <div class="pchev pchev--new">Entrada por correo<small>NUEVO · ALTA</small></div>
+      <div class="pchev pchev--out">F1–F2 Compras<small>FUERA · fuente de datos</small></div>
+      <div class="pchev pchev--parcial">F3 Ejecución<small>PARCIAL</small></div>
+      <div class="pchev pchev--alta">F4 Factura<small>ALTA</small></div>
+      <div class="pchev pchev--alta">F5 Registro SAP (MR)<small>ALTA · escritura controlada</small></div>
+      <div class="pchev pchev--alta">F6 Constancia<small>ALTA</small></div>
+      <div class="pchev pchev--parcial">F7 Firma<small>PARCIAL · firma humana</small></div>
+      <div class="pchev pchev--alta">F8 Portal y alertas<small>ALTA</small></div>
+      <div class="pchev pchev--new">Ruta por contrato<small>NUEVO · ALTA</small></div>
+      <div class="pchev pchev--egr">Capa 3 · Egresos<small>RECIBE EXPEDIENTE LIMPIO</small></div>
+    </div>
+
+    <h3 class="sub">Principios de diseño</h3>
+    <div class="grid grid--4">
+      <div class="card card--accent"><h3>Agnóstico de tecnología</h3><p>Se define por capacidades (ingesta de correo, extracción, reglas, agente, expediente, integración, BI), no por producto. La selección se hace con criterios, sección 5.</p></div>
+      <div class="card card--accent"><h3>SAP desacoplado</h3><p>Un adaptador único hacia SAP. Hoy usa RFC (on-premise y nube privada); al migrar a S/4HANA Private Edition cambia la conexión, no el flujo ni las reglas.</p></div>
+      <div class="card card--accent"><h3>Lectura primero</h3><p>La escritura en SAP es mínima, controlada y siempre en borrador o pendiente de aprobación humana.</p></div>
+      <div class="card card--accent"><h3>Personas deciden</h3><p>El agente prepara y recomienda. Las personas validan conformidad, firman y autorizan pagos. Nada se paga sin ellas.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. ARQUITECTURA ================= -->
+<section class="sec" id="arquitectura">
+  <div class="wrap">
+    <span class="sec__eyebrow">2 · Arquitectura de la solución</span>
+    <h2 class="sec__title">Actores, plataforma y conectividad</h2>
+    <p class="sec__lead">El buzón de correo es la entrada, SAP es la fuente de verdad contable y valida la referencia de cada factura, el Portal GMXT (con API) recibe el expediente firmado y marca el inicio del plazo, y la plataforma de automatización los une. <span class="rw rw--L">L</span> es lectura y <span class="rw rw--E">E</span> escritura controlada.</p>
+
+    <div class="arch">
+      <svg viewBox="0 0 1400 780" role="img" aria-label="Diagrama de arquitectura: Proveedor, buzón de correo, Portal GMXT con API, plataforma de automatización, adaptador SAP, SAP, usuarios, líder, Egresos y BI">
+        <defs>
+          <marker id="aa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#123E99"/></marker>
+        </defs>
+
+        <rect class="a-box a-box--ext" x="20" y="40" width="110" height="330" rx="12"/>
+        <foreignObject x="20" y="40" width="110" height="330"><div class="a-txt"><b>Proveedor</b><span>Emite la factura y la envía por correo; recibe el expediente firmado, el estatus y el aviso de pago</span></div></foreignObject>
+
+        <rect class="a-box a-box--mail" x="200" y="40" width="210" height="120" rx="12"/>
+        <foreignObject x="200" y="40" width="210" height="120"><div class="a-txt"><b>Buzón de correo de facturas</b><span>Recibe el correo con la factura (XML/PDF) y sirve de canal de avisos y solicitudes al proveedor</span></div></foreignObject>
+
+        <rect class="a-box a-box--gmxt" x="200" y="200" width="210" height="170" rx="12"/>
+        <foreignObject x="200" y="200" width="210" height="170"><div class="a-txt"><b>Portal GMXT · expone API</b><span>Recibe el expediente firmado; su ingreso con acuse y folio arranca el plazo de 30 días. Fuente de acuses, estatus y documentos para Egresos</span></div></foreignObject>
+
+        <line class="a-line" x1="130" y1="100" x2="200" y2="100" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="136" y="74" width="58" height="20"><div class="a-pill a-pill--N">correo</div></foreignObject>
+        <line class="a-line" x1="130" y1="285" x2="200" y2="285" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="136" y="259" width="58" height="20"><div class="a-pill a-pill--N">estatus</div></foreignObject>
+
+        <rect class="a-box a-box--plat" x="490" y="20" width="560" height="430" rx="16"/>
+        <foreignObject x="500" y="26" width="540" height="34"><div class="a-head">Plataforma de automatización · Agente R2P</div></foreignObject>
+
+        <rect class="a-box" x="510" y="64" width="250" height="84" rx="10"/>
+        <foreignObject x="510" y="64" width="250" height="84"><div class="a-txt"><b>Ingesta y extracción</b><span>Lee correo y adjuntos (XML/PDF), extrae datos y detecta duplicados</span></div></foreignObject>
+
+        <rect class="a-box a-box--mail" x="780" y="64" width="250" height="84" rx="10"/>
+        <foreignObject x="780" y="64" width="250" height="84"><div class="a-txt"><b>Validación de referencia</b><span>Consulta SAP: pedido, contrato o sin referencia</span></div></foreignObject>
+
+        <rect class="a-box a-box--bot" x="510" y="158" width="250" height="84" rx="10"/>
+        <foreignObject x="510" y="158" width="250" height="84"><div class="a-txt"><b>Motor de reglas · Bot</b><span>Match triple, vigencia y saldo del contrato, imputación, presupuesto</span></div></foreignObject>
+
+        <rect class="a-box a-box--agent" x="780" y="158" width="250" height="84" rx="10"/>
+        <foreignObject x="780" y="158" width="250" height="84"><div class="a-txt"><b>Agente de IA · excepciones</b><span>Discrepancias, evidencia, constancia prellenada, correos al proveedor</span></div></foreignObject>
+
+        <rect class="a-box" x="510" y="252" width="250" height="84" rx="10"/>
+        <foreignObject x="510" y="252" width="250" height="84"><div class="a-txt"><b>Expediente, reloj y bitácora</b><span>Plazo de 30 días desde el ingreso al Portal y cada decisión</span></div></foreignObject>
+
+        <rect class="a-box a-box--human" x="780" y="252" width="250" height="84" rx="10"/>
+        <foreignObject x="780" y="252" width="250" height="84"><div class="a-txt"><b>Avisos, alertas y firmas</b><span>Recordatorios, firma, MR y alertas de pagos recurrentes</span></div></foreignObject>
+
+        <rect class="a-box" x="510" y="348" width="520" height="72" rx="10"/>
+        <foreignObject x="510" y="348" width="520" height="72"><div class="a-txt"><b>Seguridad y gobierno</b><span>Identidad técnica con privilegios mínimos · segregación de funciones · límites de autonomía · modo sombra antes de escribir</span></div></foreignObject>
+
+        <line class="a-line" x1="410" y1="110" x2="490" y2="110" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="414" y="84" width="72" height="20"><div class="a-pill a-pill--L">L · lee</div></foreignObject>
+        <foreignObject x="414" y="124" width="72" height="20"><div class="a-pill a-pill--E">E · avisa</div></foreignObject>
+
+        <line class="a-line" x1="410" y1="300" x2="490" y2="300" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="414" y="274" width="72" height="20"><div class="a-pill a-pill--L">L · API</div></foreignObject>
+        <foreignObject x="414" y="314" width="72" height="20"><div class="a-pill a-pill--E">E · API</div></foreignObject>
+
+        <line class="a-line" x1="770" y1="450" x2="770" y2="486" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="786" y="456" width="190" height="20"><div class="a-pill a-pill--N">contrato de datos único</div></foreignObject>
+
+        <rect class="a-box a-box--adapt" x="490" y="486" width="560" height="104" rx="14"/>
+        <foreignObject x="500" y="490" width="540" height="40"><div class="a-head" style="color:#8A5A07">Adaptador SAP · capa de abstracción</div></foreignObject>
+        <rect class="a-box" x="510" y="532" width="250" height="46" rx="8"/>
+        <foreignObject x="510" y="532" width="250" height="46"><div class="a-txt a-txt--sm">Hoy · on-premise y nube privada<br>RFC·BAPI, IDoc, OData/SOAP</div></foreignObject>
+        <rect class="a-box" x="780" y="532" width="250" height="46" rx="8"/>
+        <foreignObject x="780" y="532" width="250" height="46"><div class="a-txt a-txt--sm">Destino · S/4HANA Private Edition<br>RFC·BAPI y APIs OData/SOAP</div></foreignObject>
+
+        <line class="a-line" x1="770" y1="590" x2="770" y2="640" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="500" y="597" width="256" height="36"><div class="a-pill a-pill--L">L · pedido, PEP/CeCo, contratos, presupuesto, historial</div></foreignObject>
+        <foreignObject x="784" y="597" width="256" height="36"><div class="a-pill a-pill--E">E controlada · MR borrador, provisión borrador, adjuntos</div></foreignObject>
+
+        <rect class="a-box a-box--sap" x="490" y="640" width="560" height="96" rx="14"/>
+        <foreignObject x="490" y="640" width="560" height="96"><div class="a-txt"><b>SAP · on-premise y nube privada hoy → S/4HANA Cloud Private Edition</b><span>Pedido · PEP / centro de costo · contratos y calendario de pagos · presupuesto · hoja de entrada (MR) · facturas · provisiones · pagos</span></div></foreignObject>
+
+        <rect class="a-box a-box--human" x="1170" y="40" width="210" height="86" rx="12"/>
+        <foreignObject x="1170" y="40" width="210" height="86"><div class="a-txt"><b>Usuario solicitante</b><span>Valida conformidad, acepta el MR, firma la constancia</span></div></foreignObject>
+
+        <rect class="a-box a-box--human" x="1170" y="150" width="210" height="86" rx="12"/>
+        <foreignObject x="1170" y="150" width="210" height="86"><div class="a-txt"><b>Líder / aprobador</b><span>Recibe paquete pre-validado; aprueba y firma</span></div></foreignObject>
+
+        <rect class="a-box a-box--human" x="1170" y="260" width="210" height="86" rx="12"/>
+        <foreignObject x="1170" y="260" width="210" height="86"><div class="a-txt"><b>Egresos y Tesorería</b><span>Reciben expediente completo; revisan excepciones y ejecutan el pago en SAP</span></div></foreignObject>
+
+        <rect class="a-box a-box--bi" x="1170" y="370" width="210" height="150" rx="12"/>
+        <foreignObject x="1170" y="370" width="210" height="150"><div class="a-txt"><b>BI y Gerencias</b><span>Tableros de Capex/Opex, contratos, SLA, pagos oportunos, pagos recurrentes, proyectos (PEP) y provisiones</span></div></foreignObject>
+
+        <line class="a-line" x1="1050" y1="83" x2="1170" y2="83" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="1054" y="58" width="116" height="20"><div class="a-pill a-pill--N">tareas · alertas</div></foreignObject>
+        <line class="a-line" x1="1050" y1="193" x2="1170" y2="193" marker-start="url(#aa)" marker-end="url(#aa)"/>
+        <foreignObject x="1054" y="168" width="116" height="20"><div class="a-pill a-pill--N">paquete · firma</div></foreignObject>
+        <line class="a-line" x1="1050" y1="303" x2="1170" y2="303" marker-end="url(#aa)"/>
+        <foreignObject x="1058" y="278" width="104" height="20"><div class="a-pill a-pill--N">expediente</div></foreignObject>
+        <line class="a-line" x1="1050" y1="445" x2="1170" y2="445" marker-end="url(#aa)"/>
+        <foreignObject x="1058" y="420" width="104" height="20"><div class="a-pill a-pill--N">datos · KPIs</div></foreignObject>
+
+        <rect class="a-box" x="1170" y="548" width="210" height="200" rx="12"/>
+        <foreignObject x="1170" y="548" width="210" height="200"><div class="a-txt" style="justify-content:flex-start;gap:7px"><b>Leyenda</b>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#1E5FE0;margin-right:6px"></i>Bot (reglas)</span>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#6D3FD1;margin-right:6px"></i>Agente de IA</span>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#B9790C;margin-right:6px"></i>Personas</span>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#0B7A71;margin-right:6px"></i>Portal GMXT</span>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#A04D8F;margin-right:6px"></i>Correo</span>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#3B4B6B;margin-right:6px"></i>SAP</span>
+          <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#1F8A4C;margin-right:6px"></i>BI y Gerencias</span></div></foreignObject>
+      </svg>
+    </div>
+
+    <div class="grid grid--3" style="margin-top:14px">
+      <div class="card card--accent"><h3>Un solo contrato de datos</h3><p>La plataforma habla con el adaptador en términos de negocio (pedido, contrato, imputación, MR), nunca con tablas ni funciones de SAP. Eso aísla la migración.</p></div>
+      <div class="card card--accent"><h3>Egresos sigue en SAP</h3><p>Egresos y Tesorería registran pasivo y pago directamente en SAP, como hoy. La solución les entrega el expediente listo y lee el estatus del pago.</p></div>
+      <div class="card card--accent"><h3>Auditabilidad de extremo a extremo</h3><p>Cada decisión del bot o del agente queda en la bitácora del expediente, con los datos que vio y la regla que aplicó.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 3. FLUJO TO-BE ================= -->
+<section class="sec" id="flujo">
+  <div class="wrap">
+    <span class="sec__eyebrow">3 · Flujo TO-BE</span>
+    <h2 class="sec__title">Quién hace qué: del correo del proveedor al pago</h2>
+    <p class="sec__lead">El diagrama A arranca cuando el proveedor envía la factura por correo. R2P valida en SAP si corresponde a un pedido (ruta de Solicitud y recepción de servicios) o a un contrato (validación y carátula de agenda de pago); ambas rutas confluyen en la aprobación. En la Fase 8 el expediente firmado se ingresa al Portal, lo que arranca el plazo de 30 días, y se crean las alertas de pagos recurrentes. El diagrama B vigila contratos, presupuesto, SLA, pagos recurrentes y provisiones sin esperar una factura. Cada caja abre su detalle; las etiquetas <b>SAP·L</b>, <b>GMXT·E</b> y <b>CORREO·E</b> indican lectura (L) o escritura (E).</p>
+
+    <div class="ftabs" id="flowTabs" role="group" aria-label="Diagrama">
+      <button type="button" class="ftab" data-flow="A" aria-pressed="true">A · De la factura al pago</button>
+      <button type="button" class="ftab" data-flow="B" aria-pressed="false">B · Vigilancia continua</button>
+    </div>
+
+    <div class="flowbar" id="filterBar" role="group" aria-label="Resaltar por tipo">
+      <span class="flowbar__lbl">Resaltar</span>
+      <button type="button" class="fchip" data-filter="bot" aria-pressed="false" style="--c:#1E5FE0"><i></i>Bot</button>
+      <button type="button" class="fchip" data-filter="agent" aria-pressed="false" style="--c:#6D3FD1"><i></i>Agente IA</button>
+      <button type="button" class="fchip" data-filter="human" aria-pressed="false" style="--c:#B9790C"><i></i>Personas</button>
+      <button type="button" class="fchip" data-filter="gmxt" aria-pressed="false" style="--c:#0B7A71"><i></i>Portal GMXT</button>
+      <button type="button" class="fchip" data-filter="mail" aria-pressed="false" style="--c:#A04D8F"><i></i>Correo</button>
+      <button type="button" class="fchip" data-filter="sap" aria-pressed="false" style="--c:#3B4B6B"><i></i>SAP</button>
+      <button type="button" class="fchip" data-filter="bi" aria-pressed="false" style="--c:#1F8A4C"><i></i>BI</button>
+      <button type="button" class="fchip" data-filter="sapL" aria-pressed="false" style="--c:#1E5FE0"><i></i>Lee SAP</button>
+      <button type="button" class="fchip" data-filter="sapE" aria-pressed="false" style="--c:#C24A3D"><i></i>Escribe en SAP</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="canvas-scroll" id="scroll-A"><div class="canvas" id="canvas-A" data-filter=""><svg class="canvas__svg" id="edges-A" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+    <div class="canvas-scroll is-hidden" id="scroll-B"><div class="canvas" id="canvas-B" data-filter=""><svg class="canvas__svg" id="edges-B" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+    <div class="canvas-hint">Desliza horizontalmente · toca una caja para ver su detalle · rojo punteado = “No” · verde punteado = datos hacia BI →</div>
+  </div>
+
+  <div class="wrap">
+    <div class="flow-controls">
+      <div class="flow-controls__labels"><span id="phaseLabel">Fase</span><span id="stepLabel">Paso 1 de 1</span></div>
+      <div class="flow-controls__bar"><div class="flow-controls__fill" id="barFill"></div></div>
+      <div class="flow-controls__buttons">
+        <button type="button" id="btnRestart" class="btn btn--ghost"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg><span>Reiniciar</span></button>
+        <div class="flow-controls__nav">
+          <button type="button" id="btnPrev" class="btn btn--outline">← Retroceder</button>
+          <button type="button" id="btnNext" class="btn btn--solid">Avanzar →</button>
+        </div>
+      </div>
+    </div>
+    <section class="detail" id="detail" aria-live="polite"></section>
+  </div>
+</section>
+
+<!-- ================= 4. QUÉ SE AUTOMATIZA ================= -->
+<section class="sec" id="fases">
+  <div class="wrap">
+    <span class="sec__eyebrow">4 · Qué se automatiza</span>
+    <h2 class="sec__title">Entrada, Fases 3 a 8 y ruta por contrato: hoy contra propuesta</h2>
+    <p class="sec__lead">El “hoy” viene del diagrama AS-IS de Solicitud y recepción de servicios, del manual de Egresos (MPDFIN-04) y de tu descripción de la cadena manual.</p>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Tramo</th><th>Hoy (manual)</th><th>Con el Agente R2P</th><th>Quién</th><th>SAP</th><th>Nivel</th></tr></thead>
+        <tbody>
+          <tr><td>Entrada por correo</td><td>Una persona recibe el correo, revisa la factura, la captura y decide a quién turnarla.</td><td>El bot lee el correo, extrae los datos y valida en SAP si la factura corresponde a un pedido o a un contrato. El agente pide lo que falte. El Portal aún no interviene.</td><td><span class="tag tag--mail">Correo</span> <span class="tag tag--bot">Bot</span> <span class="tag tag--agent">Agente</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--nuevo">NUEVO · ALTA</span></td></tr>
+          <tr><td>F3 · Ejecución del servicio</td><td>El proveedor entrega; el solicitante valida “recibido conforme” y registra evidencia. Nadie vigila fechas, contrato ni presupuesto de forma automática.</td><td>El bot abre el expediente y valida contrato, imputación y presupuesto. El agente resume la evidencia contra el alcance del pedido. El usuario decide la conformidad.</td><td><span class="tag tag--bot">Bot</span> <span class="tag tag--agent">Agente</span> <span class="tag tag--human">Persona</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--parcial">PARCIAL</span></td></tr>
+          <tr><td>F4 · Recepción de factura</td><td>El responsable en SAP contrasta la factura con pedido, servicio y montos; si no coincide la devuelve al proveedor.</td><td>El bot hace el match triple y el agente gestiona las discrepancias, con el expediente ya armado desde el correo y SAP.</td><td><span class="tag tag--bot">Bot</span> <span class="tag tag--agent">Agente</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--alta">ALTA</span></td></tr>
+          <tr><td>F5 · Registro en SAP (MR)</td><td>Se genera el MR y se obtiene el folio a mano.</td><td>El bot crea la hoja de entrada en borrador; el usuario responsable la acepta; el bot lee el folio y lo anexa.</td><td><span class="tag tag--bot">Bot</span> <span class="tag tag--human">Persona</span></td><td><span class="rw rw--E">E controlada</span></td><td><span class="lvl lvl--alta">ALTA</span></td></tr>
+          <tr><td>F6 · Constancia de recepción</td><td>El solicitante elabora la constancia y registra el MR en constancia y factura.</td><td>El agente prellena la constancia (Anexo 6.6) con pedido, factura, fechas, MR y respaldos. La persona revisa y firma.</td><td><span class="tag tag--agent">Agente</span> <span class="tag tag--human">Persona</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--alta">ALTA</span></td></tr>
+          <tr><td>F7 · Firma y autorización</td><td>Se envían factura y constancia al líder, que revisa y firma. El rechazo y la devolución no están documentados (brecha 21.1).</td><td>El agente pre-valida el paquete. El bot lo rutea con recordatorios y escalamiento. El rechazo queda con motivo y regresa a corrección. El líder firma.</td><td><span class="tag tag--agent">Agente</span> <span class="tag tag--bot">Bot</span> <span class="tag tag--human">Persona</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--parcial">PARCIAL</span></td></tr>
+          <tr><td>F8 · Ingreso al Portal y alertas</td><td>La constancia firmada se envía al proveedor, que sube su documentación al Portal GMXT; después se agenda el pago.</td><td>El bot ingresa el expediente firmado al Portal por API (arranca el plazo de 30 días), notifica, <b>crea alertas de pagos recurrentes</b> para pedidos con pagos pendientes y contratos con pagos programados, concilia el acuse y entrega a Egresos con la fecha límite calculada.</td><td><span class="tag tag--bot">Bot</span> <span class="tag tag--gmxt">Portal</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--alta">ALTA</span></td></tr>
+          <tr><td>Ruta por contrato</td><td>El diagrama de Capa 1 solo describe servicios con pedido; no hay un tramo definido para facturas que se pagan contra un contrato.</td><td>El bot valida vigencia, saldo y tarifa en SAP, comprueba imputación y presupuesto y crea la carátula de agenda de pago. Si el contrato no es válido, alerta y retiene el pago.</td><td><span class="tag tag--bot">Bot</span> <span class="tag tag--agent">Agente</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--nuevo">NUEVO · ALTA</span></td></tr>
+          <tr><td>Capa 3 · Egresos (5.1 / 5.4)</td><td>Verifica el portal, crea el pasivo, revisa aritmética, elabora solicitud y propuesta de pago, y Tesorería ejecuta.</td><td>Recibe un expediente pre-validado y revisa por excepción. Registro del pasivo y pago siguen siendo acciones de personas en SAP. <i>Hipótesis a validar con esa gerencia.</i></td><td><span class="tag tag--human">Persona</span> <span class="tag tag--bot">Bot (apoyo)</span></td><td><span class="rw rw--E">E humana</span></td><td><span class="lvl lvl--parcial">POSTERIOR</span></td></tr>
+          <tr><td>F1–F2 · Solicitud y gestión de compras</td><td>Abastecimientos (Capa 2) cotiza, compara, autoriza por monto y libera el pedido.</td><td>No se automatiza aquí. Aporta los datos del pedido y del contrato: PEP o centro de costo, condiciones de pago y fecha de terminación.</td><td><span class="tag tag--ext">Abastecimientos</span></td><td><span class="rw rw--L">L</span></td><td><span class="lvl lvl--fuera">FUERA</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 5. SAP, PORTAL Y CORREO ================= -->
+<section class="sec" id="sap">
+  <div class="wrap">
+    <span class="sec__eyebrow">5 · Conectividad y tecnología</span>
+    <h2 class="sec__title">SAP (lectura o escritura), Portal GMXT y buzón de correo</h2>
+    <p class="sec__lead">Primero qué se toca y con qué permiso; después cómo se conecta SAP con lo que tienes hoy (on-premise y nube privada, con RFC) y con el destino (S/4HANA Private Edition).</p>
+
+    <h3 class="sub">5.1 · Acceso a SAP por objeto</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Objeto SAP</th><th>Acceso</th><th>Para qué</th><th>Hoy · on-premise y nube privada (RFC)</th><th>Destino · S/4HANA Private Edition</th></tr></thead>
+        <tbody>
+          <tr><td>Pedido: cabecera, posiciones, imputación (PEP / CeCo), condiciones de pago, importe pendiente, texto del servicio</td><td><span class="rw rw--L">LECTURA</span></td><td>Validar la referencia, cargo correcto, vencimiento, match triple, alcance del servicio y pagos pendientes</td><td>RFC/BAPI de lectura u OData, según la versión</td><td>Mismo RFC/BAPI; preferir la API OData liberada o vistas CDS cuando existan</td></tr>
+          <tr><td>Contratos: vigencia, saldo, tarifa, imputación y calendario de pagos</td><td><span class="rw rw--L">LECTURA</span></td><td>Validar la referencia, ruta por contrato, alertas de vencimiento y de pagos programados</td><td>RFC/BAPI u OData</td><td>Mismo RFC/BAPI o API OData liberada</td></tr>
+          <tr><td>Presupuesto y ejecución por PEP / CeCo (comprometido, real)</td><td><span class="rw rw--L">LECTURA</span></td><td>Capex/Opex contra presupuesto, control de proyectos</td><td>BAPI/OData según módulo (proyectos, CO, presupuesto)</td><td>Mismo BAPI o vistas CDS del módulo</td></tr>
+          <tr><td>Historial de MR y facturas</td><td><span class="rw rw--L">LECTURA</span></td><td>Match triple y detección de duplicados</td><td>BAPI/OData</td><td>Mismo BAPI o API OData de facturas y hoja de entrada</td></tr>
+          <tr><td>Hoja de entrada de servicios (MR)</td><td><span class="rw rw--E">ESCRITURA CONTROLADA</span></td><td>Crear en borrador con referencia al pedido y enviarla a aprobación. Sin efecto contable hasta que se aprueba</td><td>BAPI de hoja de entrada (por ejemplo, BAPI_ENTRYSHEET_CREATE) por RFC; confirmar con el equipo SAP</td><td>El mismo BAPI por RFC, o la API OData V4 de hoja de entrada de servicios si está disponible</td></tr>
+          <tr><td>Provisión de pagos</td><td><span class="rw rw--E">ESCRITURA CONTROLADA</span></td><td>Propuesta en borrador para servicios ejecutados sin MR o factura al cierre. La contabiliza una persona</td><td>A definir con Contabilidad (documento en borrador o MR provisionable)</td><td>A definir con Contabilidad (mismo mecanismo que hoy)</td></tr>
+          <tr><td>Adjuntos de evidencia, constancia y carátula</td><td><span class="rw rw--E">ESCRITURA</span></td><td>Trazabilidad del expediente junto al documento SAP</td><td>Servicios de adjuntos del documento</td><td>Servicios de adjuntos del documento</td></tr>
+          <tr><td>Pago y compensación</td><td><span class="rw rw--L">SOLO ESTATUS</span></td><td>Cerrar el expediente y medir los días del ingreso al Portal al pago. <b>El bot nunca ejecuta pagos</b></td><td>Lectura de partidas y estatus</td><td>Lectura de partidas y estatus, o vista CDS</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note note--amber"><b>Antes de comprometer alcance:</b> los nombres de las APIs y su disponibilidad cambian según la versión de SAP. Cada objeto de esta tabla debe validarse con el equipo SAP.</div>
+
+    <h3 class="sub">5.2 · SAP hoy y S/4HANA Cloud Private Edition</h3>
+    <div class="grid grid--3">
+      <div class="card card--teal"><h3>Hoy: RFC disponible</h3><p>Tu SAP on-premise y en nube privada admite RFC/BAPI. Es el canal de integración: un usuario técnico con privilegios mínimos, siempre detrás del adaptador.</p></div>
+      <div class="card card--accent"><h3>Destino confirmado: Private Edition</h3><p>RFC/BAPI siguen disponibles, igual que hoy. El adaptador conserva su interfaz y la migración se reduce a cambiar la conexión y probar en el nuevo sistema. No aplican las restricciones de Public Edition (lista limitada de BAPI e IDoc solo por SOAP).</p></div>
+      <div class="card card--amber"><h3>Recomendación de diseño</h3><p>Aunque RFC siga disponible, conviene priorizar las APIs OData liberadas cuando existan para el objeto. Eso facilita las actualizaciones futuras del sistema; RFC queda para lo que no tenga API. Se valida objeto por objeto con el equipo SAP.</p></div>
+    </div>
+    <div class="note note--teal"><b>Efecto en el plan:</b> con Private Edition baja el riesgo de la migración, porque el mismo mecanismo de integración sirve antes y después. Queda por confirmar el calendario y si los dos SAP convivirán durante la transición.</div>
+
+    <h3 class="sub">5.3 · Portal GMXT por API</h3>
+    <div class="note note--teal"><b>El Portal GMXT expone API:</b> es la vía de integración. En el flujo, el Portal entra en la Fase 8: recibe el expediente firmado y su fecha de ingreso arranca el plazo de 30 días. La automatización de la interfaz web queda solo como último recurso.</div>
+    <div class="tblwrap" style="margin-top:14px">
+      <table class="tbl">
+        <thead><tr><th>Dato u operación</th><th>Acceso</th><th>Para qué</th></tr></thead>
+        <tbody>
+          <tr><td>Ingreso del expediente firmado (factura con MR o carátula, y constancia)</td><td><span class="rw rw--E">ESCRITURA</span></td><td>Reemplaza “devolver al proveedor para que lo suba a la plataforma”</td></tr>
+          <tr><td>Validación fiscal, acuse con número de folio y fecha de ingreso</td><td><span class="rw rw--L">LECTURA</span></td><td>Confirmar el ingreso y fijar el inicio del plazo de 30 días (Anexo 6.2 del manual de Egresos)</td></tr>
+          <tr><td>Carátula del pedido, constancia de recepción de servicios, carta de datos bancarios o estado de cuenta (≤ 2 meses)</td><td><span class="rw rw--L">LECTURA</span></td><td>Verificar completitud del expediente antes de entregarlo a Egresos</td></tr>
+          <tr><td>Constancia de residencia fiscal vigente (proveedores extranjeros)</td><td><span class="rw rw--L">LECTURA</span></td><td>Validar vigencia anual en el flujo 5.4</td></tr>
+          <tr><td>Estatus del expediente, acuse del proveedor y estatus de pago</td><td><span class="rw rw--E">ESCRITURA</span></td><td>Informar al proveedor sin llamadas ni correos manuales</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Pendiente de confirmar con el responsable del Portal:</b> qué cubre exactamente la API (ingreso del expediente, lectura de acuse y fecha de ingreso, escritura de estatus, evento o webhook), cómo se autentica, límites de uso y si hay ambiente de pruebas.</div>
+
+    <h3 class="sub">5.4 · Buzón de correo de facturas</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Dato u operación</th><th>Acceso</th><th>Para qué</th></tr></thead>
+        <tbody>
+          <tr><td>Correo con la factura (XML/PDF), evidencia adjunta, remitente y fecha de llegada</td><td><span class="rw rw--L">LECTURA</span></td><td>Disparar el flujo y extraer datos (el plazo de 30 días arranca con el ingreso al Portal, no con el correo)</td></tr>
+          <tr><td>Solicitudes al proveedor (corregir, falta de referencia)</td><td><span class="rw rw--E">ESCRITURA (ENVÍO)</span></td><td>Pedir lo que falta sin intervención manual, con plantillas aprobadas</td></tr>
+          <tr><td>Avisos y alertas a usuarios, líderes, Egresos y Compras</td><td><span class="rw rw--E">ESCRITURA (ENVÍO)</span></td><td>Alertas de pagos recurrentes, recordatorios y entrega del expediente con el asunto estandarizado</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Cómo se conecta:</b> con una cuenta de servicio sobre un buzón dedicado a facturas, con acceso solo a ese buzón y privilegios mínimos. Lo que no es factura se descarta o se enruta a una persona.</div>
+
+    <h3 class="sub">5.5 · Capacidades tecnológicas y criterios de selección</h3>
+    <p class="sec__lead" style="margin-bottom:12px">La solución se define por capacidades. Cualquier plataforma (RPA, BPM/iPaaS, inteligencia documental, agentes con modelos de lenguaje) sirve si cumple los criterios.</p>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Capacidad</th><th>Qué debe hacer</th></tr></thead>
+        <tbody>
+          <tr><td>Ingesta de correo</td><td>Leer el buzón dedicado, separar facturas de otros correos, registrar la fecha de llegada y responder con plantillas.</td></tr>
+          <tr><td>Adaptador SAP</td><td>Exponer pedido, contrato, calendario de pagos, imputación, presupuesto, MR y provisión como operaciones de negocio. Mismo mecanismo (RFC u OData) para hoy y para Private Edition.</td></tr>
+          <tr><td>Conector del Portal GMXT</td><td>Consumir la API del Portal: ingresar el expediente, leer acuse y fecha de ingreso y escribir estatus.</td></tr>
+          <tr><td>Extracción documental</td><td>Leer XML y PDF, extraer campos con puntaje de confianza y marcar lo dudoso para revisión humana.</td></tr>
+          <tr><td>Motor de reglas y orquestación</td><td>Validar pedido o contrato, match triple, tolerancias, semáforos, plazos, reintentos y escalamiento. Determinista y trazable.</td></tr>
+          <tr><td>Agente de IA</td><td>Resolver excepciones y redactar textos con herramientas acotadas, sin permisos de pago ni de modificación de pedidos o contratos. Con modo sombra y límites de autonomía.</td></tr>
+          <tr><td>Expediente y bitácora</td><td>Repositorio único por factura con historial inmutable de decisiones.</td></tr>
+          <tr><td>Notificaciones, alertas y firma</td><td>Tareas a usuarios y líderes, alertas recurrentes programadas, recordatorios y firma con valor legal definido por la organización.</td></tr>
+          <tr><td>BI</td><td>Tableros y alertas a gerencias alimentados por el expediente y por SAP.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid grid--2" style="margin-top:14px">
+      <div class="card"><h3>Criterios para comparar opciones</h3><ul class="list"><li>Conectividad probada con SAP por RFC y OData, válida hoy y en S/4HANA Private Edition.</li><li>Portabilidad: poder cambiar la conexión sin rehacer el flujo.</li><li>Auditabilidad, seguridad y segregación de funciones.</li><li>Costo total (licencias, infraestructura, soporte) y habilidades internas.</li></ul></div>
+      <div class="card"><h3>Cómo decidir sin sesgo</h3><p>Evaluar al menos dos opciones con el mismo caso piloto (el tramo de entrada y las Fases 4 a 6 con facturas reales de DTD) y medir los mismos indicadores. La decisión se toma con resultados, no con preferencia de producto.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 6. BENEFICIOS ================= -->
+<section class="sec" id="beneficios">
+  <div class="wrap">
+    <span class="sec__eyebrow">6 · Beneficios</span>
+    <h2 class="sec__title">Cómo la solución cubre cada uno de los 9 beneficios</h2>
+    <p class="sec__lead">Cada beneficio indica el mecanismo, los datos que usa, un indicador sugerido y las cajas del flujo donde se habilita. Toca una caja para verla en el diagrama.</p>
+    <div class="grid grid--3" id="benefitGrid"></div>
+    <div class="card card--demo">
+      <div><h3>Demo del tablero de Capex y Opex</h3><p>Cómo se vigilaría el presupuesto con los datos que genera R2P: comprometido, facturas en tránsito, real, pagos recurrentes programados y proyección al cierre. Con datos ficticios.</p></div>
+      <a class="btn btn--solid" href="dash.html" target="_blank" rel="noopener">Abrir la demo del tablero →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 7. IMPACTO ================= -->
+<section class="sec" id="impacto">
+  <div class="wrap">
+    <span class="sec__eyebrow">7 · Impacto estimado</span>
+    <h2 class="sec__title">Estimador con tus datos: 30 minutos, 40 a 50 días y política de 30</h2>
+    <p class="sec__lead">Parte de tus datos: ~300 transacciones (90 % pedido, 10 % contrato), ~10 personas, 30 minutos de trabajo por transacción, 40 a 50 días a pago y 30 días naturales de política desde el ingreso al Portal. Lo que aún no conocemos (cómo se reparten los 30 minutos entre etapas y qué parte absorbe el agente) son <b>supuestos editables</b>. Es una estimación direccional: se sustituye con las mediciones del piloto.</p>
+
+    <div class="est__params">
+      <div class="field field--given"><label for="estTx">Transacciones del periodo <span class="badge-given">DATO TUYO</span></label><input class="num" id="estTx" type="number" min="0" step="1" value="300" inputmode="numeric"><small>~300 de enero a la fecha en DTD.</small></div>
+      <div class="field field--assumed"><label for="estMonths">Meses transcurridos <span class="badge-assumed">SUPUESTO</span></label><input class="num" id="estMonths" type="number" min="1" max="12" step="1" value="9" inputmode="numeric"><small>Para proyectar el año. Ajusta al mes real.</small></div>
+      <div class="field field--given"><label for="estPeople">Personas en el proceso <span class="badge-given">DATO TUYO</span></label><input class="num" id="estPeople" type="number" min="0" step="1" value="10" inputmode="numeric"><small>Solo para la comprobación de consistencia.</small></div>
+      <div class="field field--assumed"><label for="estFte">Horas por persona al año <span class="badge-assumed">SUPUESTO</span></label><input class="num" id="estFte" type="number" min="1" step="10" value="1800" inputmode="numeric"><small>Para convertir horas a jornadas completas.</small></div>
+    </div>
+
+    <div class="tblwrap">
+      <table class="tbl est__tbl" id="estTable">
+        <thead><tr><th>Etapa manual de hoy</th><th>Minutos por transacción <span class="badge-assumed">REPARTO SUPUESTO</span></th><th>% que absorbe R2P <span class="badge-assumed">SUPUESTO</span></th><th>Minutos tras R2P</th><th>Qué hace R2P</th></tr></thead>
+        <tbody id="estBody"></tbody>
+        <tfoot><tr><td>Total por transacción</td><td class="calc" id="estSumBefore">0</td><td class="calc" id="estSumPct">0%</td><td class="calc" id="estSumAfter">0</td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="canvas-hint" id="estMinNote" style="text-align:left;padding:8px 0 0"></p>
+
+    <div class="est__params est__params--cycle">
+      <div class="field field--given"><label for="estPedido">% de transacciones por pedido <span class="badge-given">DATO TUYO</span></label><input class="num" id="estPedido" type="number" min="0" max="100" step="5" value="90" inputmode="numeric"><small>El resto (10 %) se paga por contrato.</small></div>
+      <div class="field field--given"><label for="estDaysNow">Días hasta el pago hoy <span class="badge-given">DATO TUYO</span></label><input class="num" id="estDaysNow" type="number" min="0" step="0.5" value="45" inputmode="decimal"><small>Tu rango es de 40 a 50 días; se usa el punto medio. Se asume medido desde el ingreso al Portal; si no, hay que ajustarlo.</small></div>
+      <div class="field field--given"><label for="estPolicy">Plazo de la política (días naturales) <span class="badge-given">DATO TUYO</span></label><input class="num" id="estPolicy" type="number" min="0" step="1" value="30" inputmode="numeric"><small>Corre desde que la factura se ingresa al Portal.</small></div>
+      <div class="field field--assumed"><label for="estDaysTarget">Días objetivo con R2P <span class="badge-assumed">SUPUESTO</span></label><input class="num" id="estDaysTarget" type="number" min="0" step="0.5" value="30" inputmode="decimal"><small>Mínimo: cumplir la política. Cualquier margen adicional lo fija Egresos.</small></div>
+    </div>
+
+    <div class="est__res" id="estResults" aria-live="polite"></div>
+    <div class="note note--amber" id="estCheck"></div>
+
+    <div class="est__actions">
+      <button type="button" class="btn btn--outline" id="estReset">Restablecer valores</button>
+      <span class="canvas-hint" style="padding:0;text-align:left">Cada etapa corresponde a un paso de tu cadena de 7 pasos.</span>
+    </div>
+
+    <div class="note"><b>Cómo leer las dos medidas:</b> el <i>trabajo manual</i> (minutos) y el <i>tiempo de ciclo</i> (días) son cosas distintas y se mueven con palancas distintas. El ciclo se acorta llevando el expediente al Portal sin demoras, controlando el plazo desde el ingreso, enrutando bien, pre-validando para evitar devoluciones y avisando antes del vencimiento, no solo capturando más rápido.</div>
+    <div class="note note--amber"><b>Qué no incluye:</b> el costo de la solución ni el valor de evitar errores, refacturaciones y pagos fuera de plazo. El reparto 90/10 entre pedido y contrato es tu estimación; la línea base lo confirma.</div>
+  </div>
+</section>
+
+<!-- ================= 8. GOBIERNO Y RUTA ================= -->
+<section class="sec" id="gobierno">
+  <div class="wrap">
+    <span class="sec__eyebrow">8 · Gobierno, ruta y decisiones abiertas</span>
+    <h2 class="sec__title">Cómo implementarlo sin perder control</h2>
+
+    <h3 class="sub">Salvaguardas</h3>
+    <div class="grid grid--2">
+      <div class="card card--accent"><ul class="list">
+        <li><b>Prepara y recomienda.</b> Nunca ejecuta pagos ni modifica pedidos, contratos o facturas.</li>
+        <li><b>Respeta la matriz de niveles de autorización</b> (política 4.2). Solo rutea.</li>
+        <li><b>Privilegios mínimos y segregación:</b> quien crea el MR no lo acepta ni paga.</li>
+        <li><b>Escritura en SAP solo en borrador</b> o pendiente de aprobación.</li>
+      </ul></div>
+      <div class="card card--accent"><ul class="list">
+        <li><b>Baja confianza o monto atípico</b> pasa siempre a una persona.</li>
+        <li><b>Bitácora completa:</b> qué vio, qué decidió y por qué.</li>
+        <li><b>Modo sombra primero:</b> el agente recomienda y se compara con la decisión humana antes de activar la escritura.</li>
+        <li><b>Buzón dedicado:</b> la cuenta de servicio solo lee el buzón de facturas; los datos bancarios del proveedor no se replican.</li>
+      </ul></div>
+    </div>
+
+    <h3 class="sub">Ruta por olas</h3>
+    <div class="grid grid--4">
+      <div class="wave"><span class="wave__n">OLA 0</span><h3>Preparar</h3><ul><li>Línea base en DTD (~300 transacciones): fechas por etapa, del correo al ingreso al Portal y del ingreso al pago</li><li>Confirmar el alcance de la API del Portal y el calendario de Private Edition</li><li>Definir la carátula con Egresos y dónde vive el calendario de pagos de los contratos</li></ul><span class="rw rw--N">sin conexión</span></div>
+      <div class="wave"><span class="wave__n">OLA 1</span><h3>Ver</h3><ul><li>Lectura del buzón, del Portal y de SAP (RFC)</li><li>Plazo de 30 días desde el ingreso al Portal, tableros y alertas de contratos, presupuesto, SLA y vencimientos</li></ul><span class="rw rw--L">SAP · SOLO LECTURA</span></div>
+      <div class="wave"><span class="wave__n">OLA 2</span><h3>Preparar y proponer</h3><ul><li>Validación en SAP de pedido o contrato</li><li>Primero la ruta por pedido (90 % del volumen): match triple, MR en borrador, constancia, firma e ingreso al Portal</li><li>Después la ruta por contrato (10 %): validación y carátula</li><li>Alertas de pagos recurrentes · piloto en DTD</li></ul><span class="rw rw--LE">SAP · L + E EN BORRADOR</span></div>
+      <div class="wave"><span class="wave__n">OLA 3</span><h3>Escalar</h3><ul><li>Provisiones propuestas</li><li>Otras direcciones</li><li>Cambio de conexión a S/4HANA Private Edition al migrar</li></ul><span class="rw rw--LE">SAP · L + E CONTROLADA</span></div>
+    </div>
+
+    <h3 class="sub">Variante a evaluar: adelantar el MR</h3>
+    <div class="note note--amber"><b>Hoy el MR se crea después de recibir la factura (Fases 4 y 5).</b> Si se crea al registrar “Recibido conforme”, la provisión y el control del servicio nacen del propio MR y se evitan refacturaciones por facturas con más de 30 días sin MR (manual 5.11). Requiere validación de Contabilidad y Egresos; el flujo mostrado respeta el orden actual.</div>
+
+    <h3 class="sub">Indicadores de línea base para el piloto</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Indicador</th><th>Definición</th><th>Fuente</th></tr></thead>
+        <tbody>
+          <tr><td>Tiempo de ciclo</td><td>Días del correo al ingreso al Portal y del ingreso al Portal al pago, y por etapa (validación en SAP, conformidad, MR→firma, firma→ingreso, ingreso→pago)</td><td>Correo, Portal, SAP, bitácora</td></tr>
+          <tr><td>Pagos dentro de la política</td><td>% pagado dentro de 30 días naturales desde el ingreso al Portal y días de atraso cuando se excede</td><td>Portal, SAP</td></tr>
+          <tr><td>Tasa de reconocimiento</td><td>% de correos en que R2P valida en SAP el pedido o contrato sin ayuda</td><td>Bitácora</td></tr>
+          <tr><td>Expedientes completos a la primera</td><td>% que llega a Egresos sin devoluciones</td><td>Bitácora</td></tr>
+          <tr><td>Excepciones y discrepancias</td><td>Cantidad y causa raíz del match triple y de contratos no válidos</td><td>Agente, bitácora</td></tr>
+          <tr><td>Pagos recurrentes atendidos a tiempo</td><td>% de pagos pendientes o programados que se pagan sin atraso después de su alerta</td><td>Alertas, SAP</td></tr>
+          <tr><td>Refacturaciones</td><td>Facturas canceladas y reemitidas por error o falta de MR</td><td>Egresos</td></tr>
+          <tr><td>Esfuerzo por transacción</td><td>Minutos-persona por etapa, antes y después (alimenta el estimador de la sección 7)</td><td>Medición del piloto</td></tr>
+          <tr><td>Desviaciones de centro de costo</td><td>Casos detectados antes de crear el MR o la carátula</td><td>Bot</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">Preguntas abiertas que condicionan el diseño</h3>
+    <div class="grid grid--2">
+      <div class="card card--amber"><ul class="list">
+        <li><b>Migración a Private Edition:</b> ¿cuándo, y conviven ambos SAP durante la transición?</li>
+        <li><b>Alcance de la API del Portal GMXT:</b> ¿permite ingresar el expediente, leer acuse y fecha de ingreso, y escribir estatus?</li>
+        <li><b>Quién ingresa la factura al Portal:</b> ¿lo puede hacer el bot o la política exige que lo haga el proveedor?</li>
+        <li><b>Medición actual:</b> ¿los 40 a 50 días se miden desde el ingreso al Portal? Si se miden desde otro hito, hay que ajustar el atraso estimado.</li>
+        <li><b>Carátula de agenda de pago:</b> ¿qué campos y formato requiere Egresos?</li>
+      </ul></div>
+      <div class="card card--amber"><ul class="list">
+        <li><b>Pagos por contrato:</b> ¿requieren MR o conformidad del periodo, o basta la validación del contrato?</li>
+        <li><b>Calendario de pagos:</b> ¿dónde vive en SAP el calendario de pagos programados de los contratos?</li>
+        <li><b>Hito del Portal:</b> el manual de Egresos cuenta los días de crédito desde que recibe el expediente correcto; conviene alinearlo con la política de 30 días desde el ingreso al Portal.</li>
+        <li><b>Reglas de negocio:</b> ¿quién autoriza la validación de centro de costo, las tolerancias y la política de provisiones?</li>
+        <li><b>Firma:</b> ¿qué valor legal tiene la firma electrónica en constancia y aprobación?</li>
+      </ul></div>
+    </div>
+
+    <h3 class="sub">Fuentes</h3>
+    <ul class="src list">
+      <li>Manual de Políticas y Procedimientos de Egresos para el Trámite de Pagos con Pedido (MPDFIN-04, Rev. 2.0): procedimientos 5.1, 5.4, 5.11 y Anexos 6.2 y 6.6.</li>
+      <li>Manual de Políticas y Procedimientos de Adquisiciones (MPDABA-01, Rev. 7.0): Procedimiento 6.6.</li>
+      <li>Datos de la Dirección de Transformación Digital: ~300 transacciones (90 % por pedido, 10 % por contrato), ~10 personas, 30 min por transacción, 40 a 50 días a pago, política de 30 días naturales desde el ingreso al Portal y destino SAP S/4HANA Cloud Private Edition.</li>
+      <li><a href="https://knowledgelib.io/business/erp-integration/sap-bapi-rfc-integration/2026" target="_blank" rel="noopener">knowledgelib · SAP BAPIs and RFC Integration</a>: RFC/BAPI en ECC y S/4HANA on-premise y private cloud (fuente secundaria).</li>
+      <li><a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/0f69f8fb28ac4bf48d2b57b9637e81fa/2cf48091d5864284ac4541b86a8737fd.html" target="_blank" rel="noopener">SAP Help · BAPIs/IDocs in SAP S/4HANA Cloud Public Edition</a>: restricciones de Public Edition que no aplican a Private Edition.</li>
+      <li><a href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/91af7f8d3acd47da90d33aaacfcd0d59/a3870936db8c4526b330ef3e23a0080c.html" target="_blank" rel="noopener">SAP Help · Service Entry Sheet (Lean Services) OData V4</a></li>
+      <li><a href="https://learning.sap.com/courses/business-processes-in-sap-s-4hana-sourcing-and-procurement/processing-a-service-entry-sheet_e42ab0b6-291a-4dad-9f5c-7f508d21ae5c" target="_blank" rel="noopener">SAP Learning · Processing a Service Entry Sheet</a> (sin efecto contable hasta la aprobación)</li>
+      <li><a href="https://learning.sap.com/courses/expanding-sap-s-4hana-using-key-user-side-by-side-extensibility/explaining-the-extensibility-possibilities-depending-on-the-sap-s-4hana-version" target="_blank" rel="noopener">SAP Learning · Extensibilidad según la edición de S/4HANA</a></li>
+      <li><a href="https://community.sap.com/t5/additional-blog-posts-by-members/use-of-bapi-entrysheet-create-for-transaction-ml81n/ba-p/12983024" target="_blank" rel="noopener">SAP Community · BAPI_ENTRYSHEET_CREATE</a></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">Propuesta de solución · Pago a proveedores · Agente R2P · documento de trabajo para validación</footer>
+
+<div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button type="button" class="modal__close" id="modalClose" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* =============================================================================
+   AGENTE R2P · Recepción-a-Pago
+   Diagrama A: de la factura en el correo al pago (pedido -> Solicitud y recepción
+   de servicios, contrato -> validación y carátula de agenda de pago).
+   Diagrama B: vigilancia continua (alertas y provisiones).
+   Datos + motor de render + estimador de impacto editable.
+   ============================================================================= */
+(function(){
+"use strict";
+
+/* ---------- Tipos de actor / ejecutor ---------- */
+const KINDS = {
+  bot:   { label:"Bot · reglas",        icon:"bot" },
+  agent: { label:"Agente de IA",        icon:"agent" },
+  human: { label:"Persona",             icon:"human" },
+  sap:   { label:"SAP",                 icon:"sap" },
+  gmxt:  { label:"Portal GMXT",         icon:"gmxt" },
+  bi:    { label:"BI y Gerencias",      icon:"bi" },
+  ext:   { label:"Proveedor (externo)", icon:"ext" },
+  mail:  { label:"Correo",              icon:"mail" }
+};
+const RW = { L:"Lectura", E:"Escritura", LE:"Lectura y escritura" };
+const ACCS = [ ["sap","SAP"], ["gmxt","Portal GMXT"], ["mail","Correo"] ];
+
+/* ---------- Beneficios (los 9 solicitados) ---------- */
+const BENEFITS = [
+  { id:"pagos", short:"Pagos oportunos", title:"Pagos oportunos (por PEP o por contrato)",
+    how:"Mide el recorrido completo desde el correo y vigila el plazo de la política (30 días naturales) desde que la factura con su expediente se ingresa al Portal. Avisa antes de perder el corte semanal de Egresos y antes del vencimiento, y crea alertas de pagos recurrentes para pedidos con pagos pendientes y contratos con pagos programados.",
+    data:"Fecha de llegada del correo; fecha de ingreso y acuse (API del Portal); condiciones de pago, pedido y contrato (SAP · lectura).",
+    kpi:"% de pagos dentro de 30 días · días del ingreso al Portal al pago · días de atraso sobre la política" },
+  { id:"cecos", short:"Centros de costo correctos", title:"Cargos a los centros de costo correctos",
+    how:"Compara la imputación del pedido o del contrato (CeCo, PEP, cuenta) contra el tipo de servicio y el área solicitante. Marca desviaciones antes de crear el MR o la carátula. Solo propone: corregir el pedido le corresponde a Compras.",
+    data:"Imputación del pedido o contrato (SAP · lectura) y reglas de asignación aprobadas por Finanzas.",
+    kpi:"Desviaciones detectadas antes del MR · % de pagos con imputación correcta" },
+  { id:"presupuesto", short:"Capex / Opex vs presupuesto", title:"Vigilar Capex y Opex contra presupuesto",
+    how:"En cada evento calcula comprometido, en tránsito (facturas recibidas que R2P ya conoce), real y por ejercer por PEP (Capex) y centro de costo (Opex), con umbrales y semáforos. Los pagos programados de contratos entran a la proyección de cierre.",
+    data:"Presupuesto y ejecución por PEP / CeCo (SAP · lectura); facturas en trámite del expediente R2P.",
+    kpi:"Desviación contra presupuesto · proyección de cierre · alertas atendidas a tiempo" },
+  { id:"contratos", short:"Alertas de contratos", title:"Gestionar contratos por medio de alertas",
+    how:"Valida vigencia, saldo y tarifa en cada factura por contrato; crea alertas de los pagos programados del contrato y, de forma continua, avisa de contratos por vencer o con saldo bajo. Exige contrato autorizado en pagos de arrendamiento (política del manual de Egresos).",
+    data:"Contratos, vigencias, saldos y calendario de pagos (SAP · lectura).",
+    kpi:"Pagos contra contrato vencido (meta 0) · alertas con anticipación" },
+  { id:"sla", short:"SLA", title:"Evaluar SLA comprometidos",
+    how:"Compara la fecha de terminación contratada contra la fecha real de conformidad y mide los tiempos internos por etapa: correo a validación, MR a firma, firma a ingreso al Portal e ingreso a pago.",
+    data:"Fecha contratada (pedido); fechas de eventos del expediente.",
+    kpi:"% de servicios dentro de SLA · tiempo por etapa" },
+  { id:"servicios", short:"Servicios asegurados", title:"Asegurar los servicios",
+    how:"El expediente no avanza sin evidencia (bitácora, copia de factura y archivo fotográfico cuando aplica) ni constancia. El agente contrasta la evidencia contra el alcance del pedido.",
+    data:"Evidencia adjunta al correo o cargada por el usuario; texto y alcance del pedido (SAP · lectura).",
+    kpi:"% de expedientes completos a la primera" },
+  { id:"proyectos", short:"Control de proyectos", title:"Control de los proyectos",
+    how:"Vista por PEP: compromisos, MR, facturas en tránsito, provisiones, pagos y pagos pendientes, con semáforo de avance financiero.",
+    data:"PEP, pedidos, MR y facturas (SAP · lectura); expediente R2P.",
+    kpi:"Avance financiero por proyecto · desviación acumulada" },
+  { id:"provisiones", short:"Provisiones", title:"Provisiones de pagos en SAP",
+    how:"Detecta servicios ejecutados o recibidos sin MR o sin factura al cierre y propone la provisión en borrador para que Contabilidad la apruebe. El manual de Egresos ya reconoce el problema de áreas que no provisionan por no tener MR.",
+    data:"Evidencia, MR y facturas (lectura); documento de provisión en borrador (SAP · escritura controlada).",
+    kpi:"% de servicios del periodo provisionados · ajustes de cierre" },
+  { id:"control", short:"Control gerencial", title:"Mayor control para las gerencias",
+    how:"Tablero de excepciones, expedientes detenidos, vencimientos y pagos recurrentes próximos; resumen periódico a gerencias; bitácora auditable de cada decisión del bot, del agente y de las personas.",
+    data:"Bitácora del expediente y estatus de SAP, del Portal y del correo.",
+    kpi:"Tiempo de resolución de excepciones · 100% de decisiones con bitácora" }
+];
+const BENEFIT_NAME = Object.fromEntries(BENEFITS.map(b => [b.id, b.short]));
+
+/* =============================================================================
+   DIAGRAMA A · De la factura en el correo al pago
+   ============================================================================= */
+const LANES_A = [
+  { key:"prov",     role:"Proveedor",                              tag:"Externo",                       kind:"ext"   },
+  { key:"mail",     role:"Buzón de correo",                        tag:"Entrada y avisos",              kind:"mail"  },
+  { key:"contrato", role:"R2P · Ruta por contrato",                tag:"Bot + agente",                  kind:"bot"   },
+  { key:"gmxt",     role:"Portal GMXT",                            tag:"Ingreso, acuse y estatus · API", kind:"gmxt" },
+  { key:"bot",      role:"R2P · Bot de reglas",                    tag:"Determinista",                  kind:"bot"   },
+  { key:"agente",   role:"R2P · Agente de IA",                     tag:"Excepciones y lenguaje",        kind:"agent" },
+  { key:"sap",      role:"SAP",                                    tag:"On-premise y nube privada → S/4HANA Private", kind:"sap" },
+  { key:"usuario",  role:"Usuario solicitante / responsable SAP",  tag:"Decide y valida",               kind:"human" },
+  { key:"lider",    role:"Líder / aprobador",                      tag:"Autoriza y firma",              kind:"human" },
+  { key:"egresos",  role:"Egresos y Tesorería",                    tag:"Capa 3 · Pago",                 kind:"human" },
+  { key:"bi",       role:"BI y Gerencias",                         tag:"Control y alertas",             kind:"bi"    }
+];
+const PHASES_A = {
+  1:{ tag:"Entrada",          name:"Correo y validación en SAP" },
+  2:{ tag:"Capa 1 · Fase 3",  name:"Servicio y conformidad" },
+  3:{ tag:"Capa 1 · Fase 4",  name:"Validación de factura" },
+  4:{ tag:"Capa 1 · Fase 5",  name:"Registro del MR" },
+  5:{ tag:"Capa 1 · Fase 6",  name:"Constancia de recepción" },
+  6:{ tag:"Capa 1 · Fase 7",  name:"Firma y autorización" },
+  7:{ tag:"Capa 1 · Fase 8",  name:"Ingreso al Portal y alertas" },
+  8:{ tag:"Capa 3 · Egresos", name:"Entrega, pago y cierre" },
+  C:{ tag:"Ruta por contrato", name:"Validación del contrato y carátula", noHeader:true }
+};
+
+const NODES_A = [
+  /* ===== ENTRADA · correo y validación en SAP ===== */
+  { id:"e1", col:0, lane:"prov", type:"start", phase:1, kind:"ext", label:"Proveedor envía factura por correo",
+    title:"El proveedor envía su factura por correo",
+    desc:"Arranque del flujo: el proveedor manda su factura (XML y PDF) al buzón de facturas. El plazo de la política (30 días naturales) todavía no corre: arranca cuando la factura con su expediente se ingresa al Portal, en la Fase 8.",
+    asis:"Hoy una persona recibe ese correo, lo revisa, captura los datos y lo turna (pasos 1 y 2 de la cadena manual).",
+    benefits:["pagos"] },
+
+  { id:"e2", col:1, lane:"mail", type:"task", phase:1, kind:"mail", label:"Correo llega al buzón de facturas",
+    title:"El correo llega al buzón de facturas",
+    desc:"El correo cae en un buzón dedicado. R2P lo detecta al llegar (o con una consulta frecuente) y registra la fecha y hora de recepción, que sirve para medir cuánto tarda la factura en llegar al Portal.",
+    mail:{ m:"L", t:"Lectura del buzón dedicado de facturas con una cuenta de servicio de privilegios mínimos." },
+    benefits:["pagos","sla"] },
+
+  { id:"e3", col:2, lane:"bot", type:"task", phase:1, kind:"bot", label:"Leer correo y extraer datos de la factura",
+    title:"Leer el correo y extraer los datos de la factura",
+    desc:"El bot lee el correo y sus adjuntos. Del XML (CFDI) toma proveedor, folio fiscal, fecha, importes y las referencias de pedido o contrato; si falta el XML, extrae del PDF con un nivel de confianza. Verifica que no sea un duplicado.",
+    mail:{ m:"L", t:"Cuerpo del correo, adjuntos XML/PDF y remitente." },
+    sap:{ m:"L", t:"Facturas ya registradas por proveedor, folio y monto, para descartar duplicados." },
+    data:["XML / PDF de la factura","Folio fiscal (UUID)","Referencia de pedido o contrato"],
+    asis:"Hoy una persona abre el correo y captura los datos a mano.",
+    guard:"Si la extracción tiene baja confianza, el dato se marca y lo valida una persona.",
+    benefits:["pagos","control"] },
+
+  { id:"e4", col:3, lane:"bot", type:"task", phase:1, kind:"bot", label:"Validar en SAP: ¿pedido o contrato?",
+    title:"Validar en SAP si la factura referencia un pedido o un contrato",
+    desc:"Con la referencia extraída, el bot consulta SAP: si es un pedido, que exista, esté abierto, sea del mismo proveedor y tenga importe por recibir; si es un contrato, que exista y sea del mismo proveedor. Si la factura no trae referencia explícita, busca pedidos y contratos abiertos del proveedor con importe compatible. En este punto el Portal todavía no interviene.",
+    sap:{ m:"L", t:"Pedidos y contratos del proveedor: existencia, estatus, proveedor e importe abierto." },
+    assume:"Los campos donde cada proveedor pone la referencia se validan con una muestra de facturas reales; la tasa de reconocimiento se mide en el piloto.",
+    benefits:["pagos","control","contratos"] },
+
+  { id:"e7", col:4, lane:"bot", type:"decision", phase:1, kind:"bot", label:"¿Trae pedido? (90 %)",
+    title:"¿La factura corresponde a un pedido?",
+    desc:"Con el resultado de la validación en SAP, el bot decide la ruta. Cerca del 90 % de las transacciones de DTD son por pedido.",
+    si:"Pedido identificado: sigue la ruta Solicitud y recepción de servicios (Fases 3 a 8).",
+    no:"Se revisa si la factura corresponde a un contrato.",
+    sap:{ m:"L", t:"Resultado de la validación: pedido, estatus y proveedor." },
+    benefits:["pagos","control"] },
+
+  /* ===== RUTA POR CONTRATO ===== */
+  { id:"c1", col:5, lane:"contrato", type:"decision", phase:"C", kind:"agent", label:"¿Trae contrato? (10 %)",
+    title:"¿La factura corresponde a un contrato?",
+    desc:"Sin pedido, el agente revisa lo que encontró la validación en SAP y, si hace falta, busca la referencia de contrato en el texto del correo y en el archivo. Cerca del 10 % de las transacciones de DTD son por contrato.",
+    si:"Ruta por contrato: validar el contrato y crear la carátula de agenda de pago.",
+    no:"Sin pedido ni contrato reconocible: se pide la referencia y el expediente espera.",
+    sap:{ m:"L", t:"Existencia del contrato y proveedor asociado." },
+    benefits:["contratos","pagos"] },
+
+  { id:"c2", col:6, lane:"contrato", type:"task", phase:"C", kind:"bot", label:"Leer contrato en SAP",
+    title:"Leer el contrato en SAP",
+    desc:"Trae vigencia, saldo o importe comprometido, tarifa o importe pactado, proveedor, imputación (PEP o centro de costo), condiciones de pago y calendario de pagos programados.",
+    sap:{ m:"L", t:"Contrato: vigencia, saldo, tarifa, proveedor, imputación, condiciones y calendario de pagos." },
+    benefits:["contratos","presupuesto"] },
+
+  { id:"c3", col:7, lane:"contrato", type:"decision", phase:"C", kind:"bot", label:"¿Vigente, con saldo y tarifa?",
+    title:"¿El contrato está vigente, con saldo y con la tarifa correcta?",
+    desc:"Compara la factura contra el contrato: periodo facturado dentro de la vigencia, importe dentro del saldo y tarifa igual a la pactada.",
+    si:"El contrato es válido para este pago.",
+    no:"Alerta a Compras y al responsable del contrato; el pago se retiene hasta regularizar (vencido, sin saldo o tarifa distinta).",
+    guard:"El bot no modifica contratos: solo alerta y retiene. Corregirlos le corresponde a Compras.",
+    benefits:["contratos","pagos","control"] },
+
+  { id:"c4", col:8, lane:"contrato", type:"task", phase:"C", kind:"bot", label:"Validar imputación y presupuesto",
+    title:"Validar imputación y presupuesto del pago",
+    desc:"Comprueba que el PEP o centro de costo del contrato sea coherente con el servicio y que haya presupuesto (Capex u Opex) para este pago.",
+    sap:{ m:"L", t:"Imputación del contrato y presupuesto y ejecución por PEP / CeCo." },
+    benefits:["cecos","presupuesto","contratos"] },
+
+  { id:"c5", col:9, lane:"contrato", type:"task", phase:"C", kind:"bot", label:"Crear carátula de agenda de pago",
+    title:"Crear la carátula de agenda de pago",
+    desc:"Genera la carátula que resume lo necesario para agendar el pago: proveedor, factura, contrato con su vigencia y saldo, imputación, condición de pago, fecha propuesta de pago y evidencias. Después sigue al paquete de aprobación.",
+    sap:{ m:"L", t:"Datos del contrato y condiciones de pago para calcular la fecha propuesta." },
+    data:["Carátula de agenda de pago","Contrato (vigencia y saldo)","Factura"],
+    assume:"El contenido y el formato de la carátula se definen con Egresos. Se asume que en pagos por contrato la validación contractual sustituye al MR; confirmarlo con Egresos y Contabilidad. Si el contrato exige conformidad del periodo, la carátula espera ese registro.",
+    benefits:["pagos","contratos","control","sla"] },
+
+  { id:"ex1", col:6, lane:"mail", type:"end", phase:"C", kind:"mail", label:"Pide referencia y espera",
+    title:"Se pide la referencia y el expediente espera",
+    desc:"La factura no corresponde a un pedido ni a un contrato reconocible. El agente pide la referencia al proveedor o al área solicitante. Cuando responden, el expediente se reanuda desde la lectura del correo.",
+    mail:{ m:"E", t:"Envío de la solicitud de referencia al proveedor o al área solicitante." },
+    guard:"El expediente aparece en el tablero de excepciones y R2P mide cuánto tiempo lleva detenido.",
+    benefits:["pagos","control"] },
+
+  { id:"cend", col:8, lane:"mail", type:"end", phase:"C", kind:"mail", label:"Alerta y retiene el pago",
+    title:"Alerta a Compras y retiene el pago hasta regularizar",
+    desc:"Se avisa a Compras y al responsable del contrato con la causa (vencido, sin saldo o tarifa distinta). Cuando el contrato se regulariza en SAP, el bot reevalúa y reanuda el expediente.",
+    mail:{ m:"E", t:"Aviso a Compras y al responsable del contrato." },
+    benefits:["contratos","pagos","control"] },
+
+  /* ===== PEDIDO · Capa 1 · Fase 3 ===== */
+  { id:"p1", col:5, lane:"bot", type:"task", phase:2, kind:"bot", label:"Abrir expediente y reloj de pago",
+    title:"Abrir el expediente y activar el seguimiento de tiempos",
+    desc:"Crea el expediente del pedido con proveedor, tipo (PEP, contrato asociado o gasto corriente), condición de pago, fecha de terminación contratada y responsables. Desde aquí mide cada etapa; el plazo de 30 días de la política empieza con el ingreso al Portal.",
+    sap:{ m:"L", t:"Cabecera y posiciones del pedido, imputación (PEP / CeCo), condiciones de pago, contrato asociado y solicitante." },
+    data:["Pedido SAP","Imputación","Condiciones de pago","Fecha de terminación contratada"],
+    benefits:["pagos","sla","proyectos"] },
+
+  { id:"p2", col:6, lane:"bot", type:"task", phase:2, kind:"bot", label:"Validar imputación, presupuesto y contrato asociado",
+    title:"Validar imputación, presupuesto y contrato asociado",
+    desc:"Verifica que la imputación (PEP o centro de costo) sea coherente con el servicio y el área, que haya presupuesto y que el contrato asociado, si lo hay, esté vigente. Publica el semáforo en el tablero.",
+    sap:{ m:"L", t:"Imputación del pedido, contrato asociado y presupuesto y ejecución por PEP / CeCo." },
+    guard:"Política configurable: ante contrato vencido o presupuesto insuficiente, el bot alerta y retiene el MR hasta que una persona autorice. No corrige el pedido.",
+    benefits:["contratos","presupuesto","cecos"] },
+
+  { id:"p3", col:7, lane:"agente", type:"task", phase:2, kind:"agent", label:"Resumir evidencia vs. alcance del pedido",
+    title:"Resumir la evidencia contra el alcance del pedido",
+    desc:"El agente compara la evidencia (adjunta al correo del proveedor o cargada por el usuario) con el texto y el alcance del pedido, y entrega al usuario un resumen: qué cubre, qué falta (por ejemplo, fotos o bitácora) y alertas de fecha.",
+    sap:{ m:"L", t:"Texto y alcance del pedido." },
+    mail:{ m:"L", t:"Evidencia adjunta al correo del proveedor." },
+    benefits:["servicios"] },
+
+  { id:"p4", col:8, lane:"usuario", type:"decision", phase:2, kind:"human", label:"¿Recibido conforme?",
+    title:"¿El usuario recibe el servicio conforme a lo pactado?",
+    desc:"El usuario solicitante revisa el resumen del agente y decide la conformidad.",
+    si:"Se registra la conformidad con fecha (insumo del SLA) y continúa el flujo.",
+    no:"El proveedor corrige o reprograma; se le notifica por correo y R2P sigue midiendo el tiempo.",
+    asis:"Hoy el solicitante valida y registra la evidencia manualmente (Capa 1 · Fase 3).",
+    guard:"La conformidad es una decisión humana; el agente solo la prepara.",
+    benefits:["servicios","sla"] },
+
+  /* ===== Capa 1 · Fase 4 ===== */
+  { id:"p5", col:9, lane:"bot", type:"decision", phase:3, kind:"bot", label:"¿Cuadra el match triple?",
+    title:"¿Cuadran Pedido, Servicio recibido y Factura?",
+    desc:"Match triple: pedido (SAP), servicio recibido (conformidad y evidencia) y factura (montos, proveedor e imputación).",
+    si:"Expediente validado: continúa al registro del MR.",
+    no:"Pasa al agente para gestionar la discrepancia.",
+    sap:{ m:"L", t:"Pedido, posiciones, imputación y montos autorizados." },
+    asis:"Hoy el responsable en SAP contrasta la factura con pedido, servicio y montos (Capa 1 · Fase 4).",
+    benefits:["cecos","control"] },
+
+  { id:"p6", col:10, lane:"agente", type:"task", phase:3, kind:"agent", label:"Gestionar discrepancia",
+    title:"Gestionar la discrepancia del expediente",
+    desc:"Clasifica la causa (redondeo o tolerancia, variante de nombre, MR ausente, monto, imputación), aplica las tolerancias autorizadas y, si no puede resolver, redacta la solicitud de corrección al proveedor o la consulta al Comprador. El bot reintenta al recibir la corrección.",
+    sap:{ m:"L", t:"Pedido y movimientos para sustentar la causa." },
+    mail:{ m:"E", t:"Solicitud de corrección al proveedor o consulta al Comprador." },
+    guard:"El agente no modifica pedidos ni facturas. Si no resuelve, escala a una persona con la evidencia: qué vio, qué comparó y qué propone.",
+    ref:"Capa 2 · Abastecimientos: punto de contacto “Aclarar discrepancias” con el Comprador.",
+    benefits:["pagos","control"] },
+
+  /* ===== Capa 1 · Fase 5 ===== */
+  { id:"p7", col:11, lane:"sap", type:"task", phase:4, kind:"sap", label:"Crear MR en SAP (borrador)",
+    title:"Crear la hoja de entrada de servicios (MR) en borrador",
+    desc:"El bot solicita en SAP la creación de la hoja de entrada de servicios con referencia al pedido, en estado pendiente de aprobación. Guardar la hoja no tiene efecto contable; los asientos se generan hasta que se aprueba.",
+    sap:{ m:"E", t:"Crear hoja de entrada (MR) con referencia al pedido y enviarla a aprobación. Escritura controlada con usuario técnico de privilegios mínimos." },
+    guard:"Segregación de funciones: el bot crea, una persona acepta y Tesorería paga.",
+    assume:"Variante a evaluar: crear el MR al registrar “Recibido conforme”, no después de la factura. Evitaría refacturaciones por facturas con más de 30 días sin MR.",
+    benefits:["servicios","provisiones","cecos"] },
+
+  { id:"p8", col:12, lane:"usuario", type:"task", phase:4, kind:"human", label:"Aceptar MR en SAP",
+    title:"El usuario responsable acepta el MR en SAP",
+    desc:"El usuario responsable revisa y acepta (libera) la hoja de entrada. El bot le entrega el enlace directo y recordatorios. Si SAP tiene criterio de aprobación automática para el caso, este paso se omite.",
+    sap:{ m:"E", t:"Aceptación de la hoja de entrada: acción de la persona, con su propio usuario." },
+    benefits:["control"] },
+
+  { id:"p9", col:13, lane:"bot", type:"task", phase:4, kind:"bot", label:"Leer folio MR y anexarlo",
+    title:"Leer el folio del MR y anexarlo al expediente",
+    desc:"Lee el número y la fecha del MR y los registra en el expediente, en la factura y en la constancia. La fecha real de recepción alimenta el cálculo del SLA.",
+    sap:{ m:"L", t:"Número, fecha y estatus de la hoja de entrada." },
+    benefits:["sla","proyectos"] },
+
+  { id:"b2", col:13, lane:"bi", type:"task", phase:4, kind:"bi", label:"Tablero de SLA y entregas", sink:true,
+    title:"Tablero de SLA y entregas",
+    desc:"Fecha contratada contra fecha real y tiempos internos por etapa (correo a validación, MR a firma, firma a ingreso al Portal, ingreso a pago).",
+    benefits:["sla","control"] },
+
+  /* ===== Capa 1 · Fase 6 ===== */
+  { id:"p10", col:14, lane:"agente", type:"task", phase:5, kind:"agent", label:"Prellenar constancia de recepción",
+    title:"Prellenar la Constancia de Recepción de Servicios",
+    desc:"Genera el borrador de la constancia (Anexo 6.6): pedido, factura, proveedor, descripción del servicio, fechas contratada y real, MR y lista de respaldos (bitácora, copia de factura, archivo fotográfico).",
+    sap:{ m:"L", t:"Pedido, descripción del servicio y MR." },
+    mail:{ m:"L", t:"Factura y evidencia del expediente (recibidas por correo)." },
+    asis:"Hoy el solicitante elabora la constancia y registra el MR en constancia y factura (Capa 1 · Fase 6).",
+    data:["Constancia de Recepción de Servicios (Anexo 6.6)"],
+    benefits:["servicios"] },
+
+  { id:"p11", col:15, lane:"usuario", type:"task", phase:5, kind:"human", label:"Revisar y firmar constancia",
+    title:"Revisar y firmar la constancia",
+    desc:"Un empleado de Ferromex avala la recepción correcta del servicio y firma la constancia, que se entrega en copia al proveedor.",
+    guard:"La firma sigue siendo humana. Pendiente definir el valor legal de la firma electrónica.",
+    benefits:["servicios"] },
+
+  /* ===== Capa 1 · Fase 7 (aquí confluyen pedido y contrato) ===== */
+  { id:"j1", col:16, lane:"agente", type:"task", phase:6, kind:"agent", label:"Pre-validar paquete de aprobación",
+    title:"Pre-validar el paquete de aprobación",
+    desc:"Aquí confluyen las dos rutas. Revisa la consistencia entre factura, MR o carátula, constancia, montos, imputación y presupuesto, y deja al líder un resumen con hallazgos. Reduce rechazos por documentación inconsistente.",
+    sap:{ m:"L", t:"Presupuesto y ejecución, imputación y montos del pedido o contrato." },
+    benefits:["control","presupuesto","cecos"] },
+
+  { id:"j2", col:17, lane:"bot", type:"task", phase:6, kind:"bot", label:"Enrutar a firma con recordatorios",
+    title:"Enrutar a firma con recordatorios y escalamiento",
+    desc:"Envía el paquete al aprobador que corresponde según la matriz de niveles de autorización, con recordatorios y escalamiento si no hay respuesta.",
+    guard:"No omite ni altera la matriz de niveles de autorización (política 4.2 del manual de Egresos): solo rutea.",
+    benefits:["pagos","sla"] },
+
+  { id:"j3", col:18, lane:"lider", type:"decision", phase:6, kind:"human", label:"¿Aprueba y firma?",
+    title:"¿El líder aprueba y firma el paquete?",
+    desc:"Decisión de autorización antes del ingreso al Portal.",
+    si:"Firma el paquete; el bot adjunta firma y MR o carátula y avanza al ingreso al Portal.",
+    no:"Se rechaza con motivo registrado y regresa a corrección. Cubre la brecha 21.1: hoy el rechazo no está documentado.",
+    asis:"Hoy el líder revisa y firma; el rechazo y la devolución para corrección no están documentados (brecha 21.1).",
+    benefits:["control"] },
+
+  /* ===== Capa 1 · Fase 8 ===== */
+  { id:"j4", col:19, lane:"gmxt", type:"task", phase:7, kind:"gmxt", label:"Publicar expediente y notificar",
+    title:"Publicar el expediente firmado en el Portal y notificar al proveedor",
+    desc:"El bot ingresa por API al Portal GMXT la factura con su expediente firmado (MR o carátula y constancia). El Portal registra el ingreso con acuse y folio: desde ese momento corre el plazo de 30 días naturales de la política. Se notifica al proveedor. Reemplaza el paso manual de devolver al proveedor para que lo suba a la plataforma.",
+    gmxt:{ m:"E", t:"API del Portal: ingreso del expediente firmado; lectura del acuse y la fecha de ingreso." },
+    mail:{ m:"E", t:"Aviso al proveedor con el estatus." },
+    asis:"Hoy se devuelve al proveedor, que sube su documentación al Portal (Capa 1 · Fase 8).",
+    assume:"Si la política exige que el proveedor deposite la factura él mismo, el bot le envía el expediente firmado y verifica el ingreso por API; el plazo arranca igual con el ingreso.",
+    benefits:["pagos"] },
+
+  { id:"r1", col:20, lane:"bot", type:"task", phase:7, kind:"bot", label:"Crear alertas de pagos recurrentes",
+    title:"Crear alertas de pagos recurrentes",
+    desc:"Con el expediente ya en el Portal, el bot revisa en SAP lo que falta por pagar y programa alertas recurrentes: para pedidos (solicitudes) con pagos pendientes, por ejemplo posiciones o entregas aún por recibir o facturar; y para contratos con pagos programados, según su calendario. Cada alerta avisa antes de la fecha esperada al usuario solicitante, al responsable del contrato y a Egresos, y alimenta la vigilancia continua (diagrama B) y el tablero de Capex y Opex.",
+    sap:{ m:"L", t:"Importe pendiente por recibir o facturar del pedido y calendario de pagos programados del contrato." },
+    mail:{ m:"E", t:"Alertas recurrentes a usuario, responsable del contrato y Egresos." },
+    assume:"Se asume que “pagos pendientes” son importes del pedido aún no recibidos o facturados, y que el calendario de pagos del contrato se puede leer en SAP. Confirmar con Compras dónde vive ese calendario.",
+    guard:"Solo crea avisos en la plataforma: no escribe en SAP ni agenda pagos por su cuenta.",
+    benefits:["pagos","contratos","presupuesto","control"] },
+
+  { id:"j5", col:21, lane:"bot", type:"decision", phase:7, kind:"bot", label:"¿Acuse del proveedor?",
+    title:"¿El proveedor confirmó la recepción del expediente?",
+    desc:"El bot verifica el acuse en el Portal.",
+    si:"El expediente queda completo y se entrega a Egresos.",
+    no:"Recordatorio automático; tras los intentos definidos escala al usuario solicitante.",
+    gmxt:{ m:"L", t:"API del Portal: acuse de recibo del proveedor." },
+    benefits:["pagos"] },
+
+  /* ===== Capa 3 · Egresos y cierre ===== */
+  { id:"j6", col:22, lane:"bot", type:"task", phase:8, kind:"bot", label:"Entregar expediente a Egresos",
+    title:"Entregar el expediente completo a Egresos",
+    desc:"Verifica que el paquete cumpla el Anexo 6.2 (factura con validación, MR o carátula, constancia de servicios y datos bancarios vigentes) y lo entrega a Egresos con el asunto estandarizado y la fecha límite calculada (30 días naturales desde el ingreso al Portal), respetando el corte semanal de recepción.",
+    sap:{ m:"L", t:"Condiciones de pago y datos del pedido o contrato para calcular el vencimiento." },
+    gmxt:{ m:"L", t:"Documentos del expediente y fecha de ingreso (API del Portal)." },
+    mail:{ m:"E", t:"Entrega del expediente a Egresos con el asunto estandarizado." },
+    ref:"Inicia la Capa 3 · Egresos (5.1 nacionales o 5.4 extranjeros).",
+    benefits:["pagos","control"] },
+
+  { id:"b3", col:22, lane:"bi", type:"task", phase:8, kind:"bi", label:"Tablero de pagos oportunos", sink:true,
+    title:"Tablero de pagos oportunos",
+    desc:"Expedientes por estatus y vencimiento, riesgo de pago fuera de los 30 días, pagos recurrentes próximos y cuellos de botella por etapa.",
+    benefits:["pagos","control"] },
+
+  { id:"j7", col:23, lane:"egresos", type:"task", phase:8, kind:"human", label:"Registrar pasivo y propuesta de pago",
+    title:"Registrar el pasivo y la propuesta de pago, por excepción",
+    desc:"Egresos recibe un expediente pre-validado, revisa solo las excepciones, registra el pasivo, elabora la solicitud y la propuesta de pago y recaba la autorización (procedimientos 5.1 y 5.4).",
+    sap:{ m:"E", t:"Registro del pasivo y solicitud de pago: acciones de las personas de Egresos en SAP." },
+    ref:"Detalle completo en el diagrama de Capa 3 · Egresos.",
+    benefits:["pagos","control"] },
+
+  { id:"j8", col:24, lane:"egresos", type:"task", phase:8, kind:"human", label:"Tesorería ejecuta el pago",
+    title:"Tesorería ejecuta el pago y emite el comprobante",
+    desc:"Tesorería ejecuta la propuesta autorizada, genera el layout para la banca y el comprobante de pago con folio de control en SAP.",
+    sap:{ m:"E", t:"Ejecución del pago: acción de Tesorería. El bot nunca paga." },
+    benefits:["pagos"] },
+
+  { id:"j9", col:25, lane:"sap", type:"task", phase:8, kind:"sap", label:"SAP registra pago y folio",
+    title:"SAP registra el pago y el folio de control",
+    desc:"SAP deja el estatus de pago y el folio de control, que el bot lee para cerrar el expediente.",
+    sap:{ m:"L", t:"Estatus de pago y folio de control." },
+    benefits:["pagos","proyectos"] },
+
+  { id:"b4", col:25, lane:"bi", type:"task", phase:8, kind:"bi", label:"Tablero de proyectos y provisiones", sink:true,
+    title:"Tablero de proyectos (PEP) y provisiones",
+    desc:"Compromisos, MR, facturas, provisiones, pagos y pagos pendientes por PEP. Vista consolidada para gerencias.",
+    benefits:["proyectos","provisiones","control"] },
+
+  { id:"j10", col:26, lane:"bot", type:"task", phase:8, kind:"bot", label:"Cerrar expediente y avisar al proveedor",
+    title:"Cerrar el expediente y avisar al proveedor",
+    desc:"Lee el pago en SAP, cierra el expediente, calcula los días del ingreso al Portal al pago y el atraso contra la política, actualiza las alertas recurrentes, avisa al proveedor por el Portal y actualiza los tableros.",
+    sap:{ m:"L", t:"Pago o compensación del documento." },
+    gmxt:{ m:"E", t:"API del Portal: estatus final de pago." },
+    mail:{ m:"E", t:"Aviso de pago al proveedor." },
+    benefits:["pagos","sla","control"] },
+
+  { id:"end", col:27, lane:"prov", type:"end", phase:8, kind:"ext", label:"Proveedor pagado en plazo",
+    title:"Proveedor pagado dentro del plazo",
+    desc:"Cierre del ciclo: factura recibida, referencia validada en SAP, expediente aprobado, ingresado al Portal, entregado a Egresos y pagado.",
+    benefits:["pagos"] },
+
+  { id:"b1", col:6, lane:"bi", type:"task", phase:2, kind:"bi", label:"Tablero de contratos y Capex/Opex", sink:true,
+    title:"Tablero de contratos y Capex/Opex",
+    desc:"Semáforos y alertas por contrato, PEP y centro de costo: vigencia, saldo, comprometido contra ejecutado contra presupuesto. Las gerencias reciben las alertas sin pedirlas.",
+    benefits:["presupuesto","contratos","control"] }
+];
+/* Orden de lectura del recorrido guiado: entrada, ruta por pedido, ruta por contrato y confluencia */
+const ORDER_A = ["e1","e2","e3","e4","e7",
+  "p1","p2","b1","p3","p4","p5","p6","p7","p8","p9","b2","p10","p11",
+  "c1","c2","c3","c4","c5","ex1","cend",
+  "j1","j2","j3","j4","r1","j5","j6","b3","j7","j8","j9","b4","j10","end"];
+NODES_A.sort((a,b)=> ORDER_A.indexOf(a.id) - ORDER_A.indexOf(b.id));
+
+function E(from,to,o){ return Object.assign({ from:from, to:to, kind:"seq", route:"z" }, o||{}); }
+const EDGES_A = [
+  E("e1","e2"), E("e2","e3"), E("e3","e4"), E("e4","e7"),
+  E("e7","p1",{ label:"Sí" }),
+  E("e7","c1",{ kind:"no", route:"l", label:"No" }),
+  /* ruta por contrato */
+  E("c1","c2",{ label:"Sí" }),
+  E("c1","ex1",{ kind:"no", route:"l", label:"No" }),
+  E("c2","c3"),
+  E("c3","c4",{ label:"Sí" }),
+  E("c3","cend",{ kind:"no", route:"l", label:"No" }),
+  E("c4","c5"),
+  E("c5","j1"),
+  /* ruta por pedido */
+  E("p1","p2"), E("p2","p3"), E("p3","p4"),
+  E("p4","p5",{ label:"Sí" }),
+  E("p4","p3",{ kind:"no", route:"back", label:"No · corrige o reprograma" }),
+  E("p5","p7",{ label:"Sí" }),
+  E("p5","p6",{ kind:"no", route:"l", label:"No" }),
+  E("p6","p7"),
+  E("p7","p8"), E("p8","p9"), E("p9","p10"), E("p10","p11"), E("p11","j1"),
+  /* confluencia y cierre */
+  E("j1","j2"), E("j2","j3"),
+  E("j3","j4",{ label:"Sí" }),
+  E("j3","p10",{ kind:"no", route:"back", label:"No · rechazo con motivo" }),
+  E("j4","r1"), E("r1","j5"),
+  E("j5","j6",{ label:"Sí" }),
+  E("j5","j4",{ kind:"no", route:"back", label:"No · recordatorio" }),
+  E("j6","j7"), E("j7","j8"), E("j8","j9"), E("j9","j10"), E("j10","end"),
+  /* datos hacia BI */
+  E("p2","b1",{ kind:"info", route:"v", label:"semáforo" }),
+  E("p9","b2",{ kind:"info", route:"v", label:"fecha real" }),
+  E("j6","b3",{ kind:"info", route:"v", label:"vencimiento" }),
+  E("j9","b4",{ kind:"info", route:"v", label:"pago" })
+];
+
+/* =============================================================================
+   DIAGRAMA B · Vigilancia continua (no depende de que llegue una factura)
+   ============================================================================= */
+const LANES_B = [
+  { key:"bot",     role:"R2P · Bot de reglas",     tag:"Determinista",          kind:"bot"   },
+  { key:"agente",  role:"R2P · Agente de IA",      tag:"Excepciones y lenguaje", kind:"agent" },
+  { key:"sap",     role:"SAP",                     tag:"Fuente contable",       kind:"sap"   },
+  { key:"gmxt",    role:"Portal GMXT",             tag:"Ingresos y estatus · API", kind:"gmxt" },
+  { key:"usuario", role:"Usuarios y gerencias",    tag:"Acción",                kind:"human" },
+  { key:"contab",  role:"Contabilidad",            tag:"Provisiones",           kind:"human" },
+  { key:"bi",      role:"BI y Gerencias",          tag:"Tableros y alertas",    kind:"bi"    }
+];
+const PHASES_B = {
+  1:{ tag:"1", name:"Recolección" },
+  2:{ tag:"2", name:"Evaluación" },
+  3:{ tag:"3", name:"Alerta y acción" },
+  4:{ tag:"4", name:"Provisión y cierre" }
+};
+const NODES_B = [
+  { id:"v1", col:0, lane:"bot", type:"start", phase:1, kind:"bot", label:"Corrida programada",
+    title:"Corrida programada",
+    desc:"Se ejecuta a diario y de forma especial en el cierre de mes. No depende de que llegue una factura: vigila contratos, presupuesto, SLA, pagos recurrentes y servicios sin documentar.",
+    benefits:["control"] },
+
+  { id:"v2", col:1, lane:"sap", type:"task", phase:1, kind:"sap", label:"Leer pedidos, contratos y presupuesto",
+    title:"Leer pedidos, contratos y presupuesto",
+    desc:"Pedidos abiertos con importes pendientes, contratos vigentes con su saldo y calendario de pagos, presupuesto y ejecución por PEP y centro de costo, MR y facturas registradas.",
+    sap:{ m:"L", t:"Pedidos, contratos y calendarios de pago, presupuesto y ejecución, MR y facturas." },
+    benefits:["presupuesto","contratos","proyectos"] },
+
+  { id:"v3", col:2, lane:"gmxt", type:"task", phase:1, kind:"gmxt", label:"Leer facturas y expedientes",
+    title:"Leer facturas y expedientes en trámite",
+    desc:"Facturas ingresadas, expedientes en trámite y fechas de ingreso al Portal, que marcan el inicio del plazo de 30 días.",
+    gmxt:{ m:"L", t:"API del Portal: facturas, expedientes y fechas de ingreso." },
+    mail:{ m:"L", t:"Fecha de llegada de los correos con factura, para medir el tiempo hasta el ingreso al Portal." },
+    benefits:["pagos"] },
+
+  { id:"v4", col:3, lane:"bot", type:"task", phase:2, kind:"bot", label:"Evaluar reglas y relojes",
+    title:"Evaluar reglas y relojes de pago",
+    desc:"Aplica las reglas sobre los datos leídos.",
+    data:["Pagos cerca de los 30 días desde el ingreso al Portal o del corte semanal","Pagos recurrentes próximos: pedidos con pagos pendientes y contratos con pagos programados","Contratos por vencer o con saldo bajo","Ejecución presupuestal por encima del umbral (Capex y Opex)","SLA incumplido o en riesgo","Servicios recibidos sin MR o sin factura"],
+    guard:"Los umbrales de aviso (por ejemplo, avisos escalonados antes del día 30) son configurables y los aprueban Egresos y Finanzas.",
+    benefits:["pagos","contratos","presupuesto","sla","provisiones"] },
+
+  { id:"bs", col:3, lane:"bi", type:"task", phase:2, kind:"bi", label:"Tableros y alertas a gerencias", sink:true,
+    title:"Tableros y alertas a gerencias",
+    desc:"Estado de contratos, Capex y Opex, SLA, pagos por vencer, pagos recurrentes y proyectos, actualizado en cada corrida.",
+    benefits:["presupuesto","contratos","sla","pagos","proyectos","control"] },
+
+  { id:"v5", col:4, lane:"bot", type:"decision", phase:2, kind:"agent", label:"¿Hay desviación o umbral?",
+    title:"¿Existe una desviación o se superó un umbral?",
+    desc:"El agente prioriza y explica la causa.",
+    si:"Genera una alerta priorizada con causa y acción sugerida.",
+    no:"Sin acción: termina la corrida.",
+    benefits:["control"] },
+
+  { id:"v11", col:4, lane:"bi", type:"end", phase:2, kind:"bi", label:"Sin desviación; fin de corrida",
+    title:"Sin desviación: termina la corrida",
+    desc:"No hay nada que alertar. Los indicadores ya quedaron actualizados en el tablero; la siguiente corrida programada arranca un nuevo ciclo.",
+    benefits:["control"] },
+
+  { id:"v6", col:5, lane:"agente", type:"task", phase:3, kind:"agent", label:"Priorizar y explicar la alerta",
+    title:"Priorizar y explicar la alerta",
+    desc:"Redacta la alerta con la causa, el impacto y la acción sugerida, y la dirige a quien corresponde (usuario, Compras, Egresos o gerencia).",
+    benefits:["control","pagos"] },
+
+  { id:"v7", col:6, lane:"usuario", type:"task", phase:3, kind:"human", label:"Recibir alerta y definir acción",
+    title:"Recibir la alerta y definir la acción",
+    desc:"El usuario, Compras o la gerencia reciben la alerta en su canal habitual y registran la acción. La acción queda en la bitácora.",
+    mail:{ m:"E", t:"Alerta enviada por correo o mensajería corporativa." },
+    benefits:["control","contratos"] },
+
+  { id:"v8", col:7, lane:"bot", type:"task", phase:4, kind:"bot", label:"Proponer provisión de cierre",
+    title:"Proponer la provisión de cierre",
+    desc:"Para servicios ejecutados o recibidos sin MR o sin factura al cierre, prepara la propuesta de provisión.",
+    sap:{ m:"E", t:"Propuesta de provisión en borrador. El objeto contable exacto se define con Contabilidad." },
+    guard:"Escritura controlada: solo borrador. La contabilización la aprueba una persona de Contabilidad.",
+    benefits:["provisiones","proyectos"] },
+
+  { id:"v9", col:8, lane:"contab", type:"task", phase:4, kind:"human", label:"Validar y contabilizar la provisión",
+    title:"Validar y contabilizar la provisión",
+    desc:"Contabilidad revisa la propuesta y la contabiliza en SAP.",
+    sap:{ m:"E", t:"Contabilización de la provisión: acción de Contabilidad con su propio usuario." },
+    benefits:["provisiones"] },
+
+  { id:"v10", col:9, lane:"bi", type:"end", phase:4, kind:"bi", label:"Bitácora y KPI actualizados",
+    title:"Bitácora y KPI actualizados",
+    desc:"Se registran las acciones y los resultados para la siguiente corrida y para la auditoría.",
+    benefits:["control"] }
+];
+const EDGES_B = [
+  E("v1","v2"), E("v2","v3"), E("v3","v4"), E("v4","v5"),
+  E("v5","v6",{ label:"Sí" }),
+  E("v5","v11",{ kind:"no", route:"v", label:"No" }),
+  E("v6","v7"), E("v7","v8"), E("v8","v9"), E("v9","v10"),
+  E("v4","bs",{ kind:"info", route:"v", label:"KPIs" })
+];
+
+const FLOWS = {
+  A:{ key:"A", name:"Factura a pago", lanes:LANES_A, phases:PHASES_A, nodes:NODES_A, edges:EDGES_A },
+  B:{ key:"B", name:"Vigilancia continua", lanes:LANES_B, phases:PHASES_B, nodes:NODES_B, edges:EDGES_B }
+};
+
+/* ---------- Geometría ---------- */
+const G = { LABEL_W:190, COL_W:196, PHASE_H:56, LANE_H:94, BOTTOM_M:112, TASK_W:154, TASK_H:66, DEC_W:150, DEC_H:84, CIRC:76 };
+function boxSize(type){
+  if(type==="decision") return [G.DEC_W, G.DEC_H];
+  if(type==="start" || type==="end") return [G.CIRC, G.CIRC];
+  return [G.TASK_W, G.TASK_H];
+}
+function prepare(f){
+  f.laneIndex = Object.fromEntries(f.lanes.map((l,i)=>[l.key,i]));
+  f.byId = {};
+  f.nodes.forEach((n,i)=>{
+    const s = boxSize(n.type);
+    n._w = s[0]; n._h = s[1]; n._idx = i; n._flow = f.key;
+    n._x = G.LABEL_W + n.col*G.COL_W + G.COL_W/2;
+    n._y = G.PHASE_H + f.laneIndex[n.lane]*G.LANE_H + G.LANE_H/2;
+    f.byId[n.id] = n;
+  });
+  f.cols = Math.max.apply(null, f.nodes.map(n=>n.col)) + 1;
+  f.W = G.LABEL_W + f.cols*G.COL_W;
+  f.H = G.PHASE_H + f.lanes.length*G.LANE_H + G.BOTTOM_M;
+  f.current = 0;
+}
+Object.keys(FLOWS).forEach(k => prepare(FLOWS[k]));
+
+function anchor(n, side){
+  if(side==="r") return [n._x + n._w/2, n._y];
+  if(side==="l") return [n._x - n._w/2, n._y];
+  if(side==="b") return [n._x, n._y + n._h/2];
+  return [n._x, n._y - n._h/2];
+}
+/* Devuelve los puntos de la poli-línea de una conexión */
+function routeEdge(f, e, slot){
+  const a = f.byId[e.from], b = f.byId[e.to];
+  if(e.route==="z"){
+    const p1 = anchor(a,"r"), p2 = anchor(b,"l");
+    if(Math.abs(p1[1]-p2[1]) < 1) return [p1,p2];
+    const mx = p2[0] - 28;
+    return [p1,[mx,p1[1]],[mx,p2[1]],p2];
+  }
+  if(e.route==="l"){
+    const down = b._y > a._y;
+    const p1 = anchor(a, down?"b":"t"), p2 = anchor(b,"l");
+    return [p1,[p1[0],p2[1]],p2];
+  }
+  if(e.route==="v"){
+    const down = b._y > a._y;
+    return [anchor(a, down?"b":"t"), anchor(b, down?"t":"b")];
+  }
+  if(e.route==="back"){
+    const depth = G.PHASE_H + f.lanes.length*G.LANE_H + 22 + (slot%3)*24;
+    const p1 = anchor(a,"b"), p2 = anchor(b,"b");
+    return [p1,[p1[0],depth],[p2[0],depth],[p2[0],p2[1]+2]];
+  }
+  if(e.route==="uloop"){
+    const p1 = anchor(a,"t"), p2 = anchor(b,"t");
+    const topY = Math.min(p1[1], p2[1]) - 26;
+    return [p1,[p1[0],topY],[p2[0],topY],[p2[0],p2[1]-2]];
+  }
+  return [];
+}
+function routesOf(f){
+  let slot = 0;
+  return f.edges.map(e=>{
+    const pts = routeEdge(f, e, slot);
+    if(e.route==="back") slot++;
+    return { e:e, pts:pts };
+  });
+}
+function labelPos(e, pts){
+  if(e.route==="back" || e.route==="uloop") return [(pts[1][0]+pts[2][0])/2, pts[1][1]-12];
+  if(e.kind==="seq") return [pts[0][0]+24, pts[0][1]-14];
+  if(e.kind==="no"){ const down = pts[1][1] > pts[0][1]; return [pts[0][0]+16, pts[0][1] + (down?16:-16)]; }
+  return [pts[0][0]+34, (pts[0][1]+pts[1][1])/2];
+}
+
+/* ---------- Íconos ---------- */
+const ICONS = {
+  bot:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="8" width="15" height="11" rx="3"/><path d="M12 4.5V8"/><circle cx="12" cy="3.8" r="1"/><circle cx="9" cy="13.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="13.5" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+  agent:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4l1.7 5 5 1.7-5 1.7-1.7 5-1.7-5-5-1.7 5-1.7z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>`,
+  human:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1-4 4-6.2 7.5-6.2S18.5 16 19.5 20"/></svg>`,
+  sap:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="6.5" rx="1.4"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="1.4"/><circle cx="7" cy="7.25" r=".9" fill="currentColor" stroke="none"/><circle cx="7" cy="16.75" r=".9" fill="currentColor" stroke="none"/></svg>`,
+  gmxt:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/></svg>`,
+  bi:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5.5 19v-7M12 19V5M18.5 19v-10"/></svg>`,
+  ext:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2M10 20v-4h4v4"/></svg>`,
+  mail:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></svg>`,
+  gateway:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>`
+};
+
+/* ---------- Referencias DOM ---------- */
+const $ = (id) => document.getElementById(id);
+const detailEl = $("detail"), phaseLabel = $("phaseLabel"), stepLabel = $("stepLabel"), barFill = $("barFill");
+const btnPrev = $("btnPrev"), btnNext = $("btnNext"), btnRestart = $("btnRestart");
+const modalOverlay = $("modalOverlay"), modalBody = $("modalBody"), modalClose = $("modalClose");
+const filterBar = $("filterBar"), flowTabs = $("flowTabs"), benefitGrid = $("benefitGrid");
+let active = "A";
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function laneOf(f, n){ return f.lanes[f.laneIndex[n.lane]]; }
+function markerDef(id, color){
+  return '<marker id="' + id + '" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="' + color + '"></path></marker>';
+}
+
+/* ---------- Construcción del canvas de un diagrama ---------- */
+function buildCanvas(f){
+  const canvas = $("canvas-" + f.key), svg = $("edges-" + f.key);
+  f.els = { canvas:canvas, svg:svg, scroll:$("scroll-" + f.key) };
+  canvas.style.width = f.W + "px";
+  canvas.style.height = f.H + "px";
+  svg.setAttribute("width", f.W);
+  svg.setAttribute("height", f.H);
+  svg.setAttribute("viewBox", "0 0 " + f.W + " " + f.H);
+  svg.innerHTML = "<defs>" + markerDef("arrow-"+f.key,"#1E5FE0") + markerDef("arrowLoop-"+f.key,"#C24A3D") +
+                  markerDef("arrowInfo-"+f.key,"#1F8A4C") + markerDef("arrowAmber-"+f.key,"#B9790C") + "</defs>";
+
+  f.lanes.forEach((lane,i)=>{
+    const band = document.createElement("div");
+    band.className = "lane-band lane-band--" + (i%2===0 ? "a" : "b");
+    band.style.top = (G.PHASE_H + i*G.LANE_H) + "px";
+    band.style.width = f.W + "px";
+    band.style.height = G.LANE_H + "px";
+    canvas.appendChild(band);
+    const label = document.createElement("div");
+    label.className = "lane-label";
+    label.style.top = (G.PHASE_H + i*G.LANE_H) + "px";
+    label.style.width = G.LABEL_W + "px";
+    label.style.height = G.LANE_H + "px";
+    label.style.setProperty("--lc", "var(--k-" + lane.kind + ")");
+    label.innerHTML = '<span class="lane-label__role">' + esc(lane.role) + '</span><span class="lane-label__tag">' + esc(lane.tag) + '</span>';
+    canvas.appendChild(label);
+  });
+
+  const spans = {};
+  f.nodes.forEach(n=>{
+    if(f.phases[n.phase] && f.phases[n.phase].noHeader) return;
+    if(!spans[n.phase]) spans[n.phase] = { min:n.col, max:n.col };
+    spans[n.phase].min = Math.min(spans[n.phase].min, n.col);
+    spans[n.phase].max = Math.max(spans[n.phase].max, n.col);
+  });
+  const keys = Object.keys(spans).sort((a,b)=>spans[a].min - spans[b].min);
+  keys.forEach((p,idx)=>{
+    const x = G.LABEL_W + spans[p].min*G.COL_W;
+    const w = (spans[p].max - spans[p].min + 1)*G.COL_W;
+    const h = document.createElement("div");
+    h.className = "phase-header";
+    h.style.left = x + "px";
+    h.style.width = w + "px";
+    h.innerHTML = '<div class="phase-header__num">' + esc(f.phases[p].tag) + '</div><div class="phase-header__name">' + esc(f.phases[p].name) + '</div>';
+    canvas.appendChild(h);
+    if(idx>0){
+      const d = document.createElement("div");
+      d.className = "phase-divider";
+      d.style.left = x + "px";
+      d.style.height = f.H + "px";
+      canvas.appendChild(d);
+    }
+  });
+
+  f.nodes.forEach((n,idx)=>{
+    const el = document.createElement("div");
+    el.className = "node node--" + n.type + " node--k-" + n.kind;
+    el.style.left = (n._x - n._w/2) + "px";
+    el.style.top  = (n._y - n._h/2) + "px";
+    el.style.width = n._w + "px";
+    el.style.height = n._h + "px";
+    el.dataset.index = idx;
+    el.dataset.id = n.id;
+    el.dataset.sap = n.sap ? n.sap.m : "";
+    el.setAttribute("role","button");
+    el.setAttribute("tabindex","0");
+    el.setAttribute("aria-label", n.label);
+    let inner = "";
+    if(n.type==="decision"){
+      inner += '<svg class="node__shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="50,2 98,50 50,98 2,50"></polygon></svg>';
+      inner += '<span class="node__gateway">' + ICONS.gateway + '</span>';
+    }
+    if(n.type==="task"){
+      inner += '<span class="node__icon">' + ICONS[KINDS[n.kind].icon] + '</span>';
+    }
+    inner += '<span class="node__label">' + esc(n.label) + '</span>';
+    if(n.sap)  inner += '<span class="node__acc node__acc--sap rw--' + n.sap.m + '">SAP·' + n.sap.m + '</span>';
+    if(n.gmxt) inner += '<span class="node__acc node__acc--gmxt rw--' + n.gmxt.m + '">GMXT·' + n.gmxt.m + '</span>';
+    if(n.mail) inner += '<span class="node__acc node__acc--mail">CORREO·' + n.mail.m + '</span>';
+    el.innerHTML = inner;
+    n._el = el;
+    canvas.appendChild(el);
+  });
+
+  drawEdges(f);
+  canvas.addEventListener("click", (e)=>{
+    const el = e.target.closest(".node"); if(!el) return;
+    openModal(f.key, Number(el.dataset.index));
+  });
+  canvas.addEventListener("keydown", (e)=>{
+    if(e.key!=="Enter" && e.key!==" ") return;
+    const el = e.target.closest(".node"); if(!el) return;
+    e.preventDefault(); openModal(f.key, Number(el.dataset.index));
+  });
+}
+
+function drawEdges(f){
+  routesOf(f).forEach(r=>{
+    const e = r.e, pts = r.pts;
+    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d", pts.map((pt,i)=>(i===0?"M":"L") + pt[0] + "," + pt[1]).join(" "));
+    let style = "fill:none;stroke-width:2;", marker = "arrow-" + f.key;
+    if(e.kind==="no"){
+      style += "stroke:#C24A3D;" + (e.route==="back" ? "stroke-dasharray:5 4;" : "");
+      marker = "arrowLoop-" + f.key;
+    } else if(e.kind==="loop"){
+      style += "stroke:#B9790C;stroke-dasharray:5 4;";
+      marker = "arrowAmber-" + f.key;
+    } else if(e.kind==="info"){
+      style += "stroke:#1F8A4C;stroke-dasharray:3 4;";
+      marker = "arrowInfo-" + f.key;
+    } else {
+      style += "stroke:#1E5FE0;";
+    }
+    p.setAttribute("style", style);
+    p.setAttribute("marker-end", "url(#" + marker + ")");
+    f.els.svg.appendChild(p);
+    if(!e.label) return;
+    const pos = labelPos(e, pts);
+    const lbl = document.createElement("span");
+    const cls = e.kind==="seq" ? "si" : e.kind==="no" ? "no" : e.kind==="loop" ? "loop" : "info";
+    lbl.className = "edge-label edge-label--" + cls;
+    lbl.textContent = e.label;
+    lbl.style.left = pos[0] + "px"; lbl.style.top = pos[1] + "px";
+    f.els.canvas.appendChild(lbl);
+  });
+}
+
+/* ---------- Contenido de un nodo (panel y modal) ---------- */
+function accessRow(sys, acc){
+  if(!acc) return "";
+  return '<div class="conn__row"><span class="conn__sys">' + esc(sys) + '</span><span class="rw rw--' + acc.m + '">' + RW[acc.m] + '</span><span>' + esc(acc.t) + '</span></div>';
+}
+function nodeHTML(fk, n){
+  const f = FLOWS[fk], k = KINDS[n.kind], ph = f.phases[n.phase];
+  let h = '<div class="dcard"><div class="dcard__kicker">';
+  h += '<span class="tag tag--' + n.kind + '">' + esc(k.label) + '</span>';
+  h += '<span class="pill">' + esc(ph.tag) + '</span>';
+  h += '<span class="pill">' + esc(laneOf(f,n).role) + '</span></div>';
+  h += '<h3 class="dcard__title">' + esc(n.title) + '</h3>';
+  h += '<p class="dcard__desc">' + esc(n.desc) + '</p>';
+  if(n.type==="decision"){
+    h += '<div class="outcomes"><div class="outcome outcome--si"><span class="outcome__tag">SÍ</span><span>' + esc(n.si) + '</span></div>';
+    h += '<div class="outcome outcome--no"><span class="outcome__tag">NO</span><span>' + esc(n.no) + '</span></div></div>';
+  }
+  h += '<span class="lbl">Conectividad</span>';
+  if(n.sap || n.gmxt || n.mail){
+    h += '<div class="conn">' + ACCS.map(a=>accessRow(a[1], n[a[0]])).join("") + '</div>';
+  } else {
+    h += '<div class="conn conn--none">Sin acceso directo a SAP, al Portal ni al correo en este paso.</div>';
+  }
+  if(n.data && n.data.length){
+    h += '<span class="lbl">Documentos y datos</span><div class="chips">' + n.data.map(d=>'<span class="chip">' + esc(d) + '</span>').join("") + '</div>';
+  }
+  if(n.asis)   h += '<div class="callout callout--asis"><b>Hoy · </b>' + esc(n.asis) + '</div>';
+  if(n.guard)  h += '<div class="callout callout--guard"><b>Control · </b>' + esc(n.guard) + '</div>';
+  if(n.assume) h += '<div class="callout callout--assume"><b>Por validar · </b>' + esc(n.assume) + '</div>';
+  if(n.ref)    h += '<div class="callout"><b>Otras capas · </b>' + esc(n.ref) + '</div>';
+  if(n.benefits && n.benefits.length){
+    h += '<span class="lbl">Beneficios que habilita</span><div class="chips">' +
+      n.benefits.map(b=>'<button type="button" class="bchip" data-benefit="' + b + '">' + esc(BENEFIT_NAME[b]) + '</button>').join("") + '</div>';
+  }
+  return h + '</div>';
+}
+
+/* ---------- Navegación guiada ---------- */
+function render(scroll){
+  const f = FLOWS[active], n = f.nodes[f.current], ph = f.phases[n.phase];
+  f.nodes.forEach((m,i)=>{
+    m._el.classList.toggle("is-current", i===f.current);
+    m._el.classList.toggle("is-done", i<f.current);
+  });
+  phaseLabel.textContent = ph.tag + " · " + ph.name;
+  stepLabel.textContent = "Paso " + (f.current+1) + " de " + f.nodes.length;
+  barFill.style.width = ((f.current+1)/f.nodes.length*100) + "%";
+  btnPrev.disabled = f.current===0;
+  btnNext.disabled = f.current===f.nodes.length-1;
+  btnNext.textContent = f.current===f.nodes.length-1 ? "Fin del recorrido" : "Avanzar →";
+  detailEl.innerHTML = nodeHTML(f.key, n);
+  if(scroll){
+    f.els.scroll.scrollTo({ left: Math.max(0, n._x - f.els.scroll.clientWidth/2), behavior:"smooth" });
+  }
+}
+function goTo(i, scroll){
+  const f = FLOWS[active];
+  f.current = Math.max(0, Math.min(f.nodes.length-1, i));
+  render(scroll !== false);
+}
+function setFlow(k){
+  if(!FLOWS[k]) return;
+  active = k;
+  Object.keys(FLOWS).forEach(key=>{
+    FLOWS[key].els.scroll.classList.toggle("is-hidden", key!==k);
+  });
+  flowTabs.querySelectorAll(".ftab").forEach(t=>t.setAttribute("aria-pressed", String(t.dataset.flow===k)));
+  render(false);
+}
+function flash(n){
+  n._el.classList.add("is-flash");
+  setTimeout(()=>n._el.classList.remove("is-flash"), 1400);
+}
+function jumpToNode(fk, id){
+  closeModal();
+  const f = FLOWS[fk]; if(!f) return;
+  const n = f.byId[id]; if(!n) return;
+  setFlow(fk);
+  goTo(n._idx, true);
+  const sec = $("flujo"); if(sec) sec.scrollIntoView({ behavior:"smooth", block:"start" });
+  flash(n);
+}
+
+/* ---------- Modal ---------- */
+function openModal(fk, i){
+  modalBody.innerHTML = nodeHTML(fk, FLOWS[fk].nodes[i]).replace('class="dcard__title"', 'class="dcard__title" id="modalTitle"');
+  modalOverlay.classList.add("is-open");
+  modalOverlay.setAttribute("aria-hidden","false");
+}
+function closeModal(){
+  modalOverlay.classList.remove("is-open");
+  modalOverlay.setAttribute("aria-hidden","true");
+}
+function showBenefit(id){
+  closeModal();
+  const card = $("benefit-" + id); if(!card) return;
+  card.scrollIntoView({ behavior:"smooth", block:"center" });
+  card.classList.add("is-flash");
+  setTimeout(()=>card.classList.remove("is-flash"), 1400);
+}
+
+/* ---------- Beneficios ---------- */
+function renderBenefits(){
+  benefitGrid.innerHTML = BENEFITS.map((b,i)=>{
+    let btns = "", count = 0;
+    Object.keys(FLOWS).forEach(k=>{
+      FLOWS[k].nodes.forEach(n=>{
+        if(n.benefits && n.benefits.indexOf(b.id)>=0){
+          count++;
+          btns += '<button type="button" class="nodebtn" data-flow="' + k + '" data-node="' + n.id + '">' + esc(n.label) + '</button>';
+        }
+      });
+    });
+    return '<article class="bcard" id="benefit-' + b.id + '"><div class="bcard__head"><span class="bcard__num">' + (i+1) + '</span><h3>' + esc(b.title) + '</h3></div>' +
+      '<dl><dt>Cómo lo logra</dt><dd>' + esc(b.how) + '</dd>' +
+      '<dt>Datos y SAP</dt><dd>' + esc(b.data) + '</dd>' +
+      '<dt>Indicador sugerido</dt><dd>' + esc(b.kpi) + '</dd>' +
+      '<dt>Dónde se habilita (' + count + ')</dt><dd><div class="bcard__nodes">' + btns + '</div></dd></dl></article>';
+  }).join("");
+}
+
+/* =============================================================================
+   ESTIMADOR DE IMPACTO
+   DATOS TUYOS: ~300 transacciones (90 % pedido / 10 % contrato), ~10 personas,
+   30 min por transacción, 40 a 50 días a pago y política de 30 días naturales
+   desde el ingreso al Portal.
+   SUPUESTOS editables: reparto de los 30 min por etapa, % que absorbe R2P,
+   meses transcurridos, horas por persona y días objetivo.
+   ============================================================================= */
+const EST_DEFAULTS = {
+  tx: 300, pctPedido: 90, months: 9, people: 10, hoursPerPerson: 1800,
+  declaredMin: 30, daysNow: 45, policy: 30, daysTarget: 30,
+  stages: [
+    { name:"Recibir la factura (correo)",               min:5, pct:85, does:"Lee el correo, extrae los datos y valida en SAP si es pedido o contrato." },
+    { name:"Validar contra pedido, servicio y montos",  min:8, pct:70, does:"Match triple (pedido) o vigencia, saldo y tarifa (contrato); valida imputación y presupuesto." },
+    { name:"Pasar a firma",                             min:4, pct:60, does:"Arma el paquete pre-validado, lo rutea y manda recordatorios. La firma sigue siendo humana." },
+    { name:"Adjuntar el MR",                            min:4, pct:70, does:"Crea el MR en borrador, lo anexa y lo registra en constancia y factura." },
+    { name:"Devolver al proveedor",                     min:2, pct:90, does:"Notifica al proveedor con el expediente firmado." },
+    { name:"Subir a la plataforma",                     min:3, pct:90, does:"Ingresa el expediente al Portal por API y crea las alertas de pagos recurrentes." },
+    { name:"Agendar el pago",                           min:4, pct:60, does:"Calcula la fecha límite, genera la carátula (contrato) y entrega a Egresos." }
+  ]
+};
+function clampNum(v, lo, hi){
+  v = Number(v);
+  if(!isFinite(v) || isNaN(v)) v = 0;
+  if(v < lo) v = lo;
+  if(hi !== undefined && v > hi) v = hi;
+  return v;
+}
+/* Cálculo puro (se prueba de forma independiente) */
+function estimate(p){
+  const months = Math.min(12, Math.max(1, clampNum(p.months, 1)));
+  const tx = clampNum(p.tx, 0) * 12 / months;               /* transacciones proyectadas al año */
+  const hpp = Math.max(1, clampNum(p.hoursPerPerson, 1));
+  let before = 0, after = 0;
+  const rows = p.stages.map(s=>{
+    const min = clampNum(s.min, 0), pct = clampNum(s.pct, 0, 100);
+    const a = min * (1 - pct/100);
+    before += min; after += a;
+    return { min:min, pct:pct, after:a };
+  });
+  const hoursBefore = tx * before / 60, hoursAfter = tx * after / 60, saved = hoursBefore - hoursAfter;
+  const people = clampNum(p.people, 0);
+  const daysNow = clampNum(p.daysNow, 0), policy = clampNum(p.policy, 0);
+  const daysTarget = Math.min(daysNow, clampNum(p.daysTarget, 0));
+  const pctPedido = clampNum(p.pctPedido === undefined ? 100 : p.pctPedido, 0, 100);
+  return {
+    annualTx: tx, rows:rows, perTxBefore:before, perTxAfter:after,
+    pctWeighted: before > 0 ? (1 - after/before)*100 : 0,
+    hoursBefore:hoursBefore, hoursAfter:hoursAfter, hoursSaved:saved,
+    fte: saved / hpp, fteBefore: hoursBefore / hpp,
+    capacityPct: (people * hpp) > 0 ? hoursBefore / (people * hpp) * 100 : 0,
+    daysNow:daysNow, daysTarget:daysTarget, policy:policy,
+    daysGained: daysNow - daysTarget,
+    cyclePct: daysNow > 0 ? (daysNow - daysTarget) / daysNow * 100 : 0,
+    lateNow: Math.max(0, daysNow - policy), lateAfter: Math.max(0, daysTarget - policy),
+    waitPct: daysNow > 0 ? Math.max(0, (1 - before/(daysNow*1440)) * 100) : 0,
+    declaredDiff: Math.abs(before - clampNum(p.declaredMin, 0)),
+    txPedido: tx * pctPedido / 100,
+    txContrato: tx - tx * pctPedido / 100
+  };
+}
+const fmt1 = (n)=> (Math.round(n*10)/10).toLocaleString("es-MX", { minimumFractionDigits:1, maximumFractionDigits:1 });
+const fmt0 = (n)=> Math.round(n).toLocaleString("es-MX");
+
+function initEstimator(){
+  const body = $("estBody"), out = $("estResults");
+  const inPedido = $("estPedido");
+  const inTx = $("estTx"), inMonths = $("estMonths"), inPeople = $("estPeople"), inFte = $("estFte");
+  const inNow = $("estDaysNow"), inPolicy = $("estPolicy"), inTarget = $("estDaysTarget"), btnReset = $("estReset");
+  function fresh(){
+    const d = EST_DEFAULTS;
+    return { tx:d.tx, pctPedido:d.pctPedido, months:d.months, people:d.people, hoursPerPerson:d.hoursPerPerson, declaredMin:d.declaredMin,
+      daysNow:d.daysNow, policy:d.policy, daysTarget:d.daysTarget,
+      stages: d.stages.map(s=>({ name:s.name, min:s.min, pct:s.pct })) };
+  }
+  const state = fresh();
+  function buildRows(){
+    body.innerHTML = EST_DEFAULTS.stages.map((s,i)=>
+      '<tr><td>' + (i+1) + '. ' + esc(s.name) + '</td>' +
+      '<td><input class="num num--sm" type="number" min="0" step="0.5" inputmode="decimal" data-i="' + i + '" data-f="min" aria-label="Minutos por transacción: ' + esc(s.name) + '" value="' + s.min + '"></td>' +
+      '<td><input class="num num--sm" type="number" min="0" max="100" step="5" inputmode="numeric" data-i="' + i + '" data-f="pct" aria-label="Porcentaje que absorbe R2P: ' + esc(s.name) + '" value="' + s.pct + '"></td>' +
+      '<td class="calc" id="estAfter' + i + '">0</td>' +
+      '<td class="refcell">' + esc(s.does) + '</td></tr>'
+    ).join("");
+  }
+  function paint(){
+    const r = estimate(state);
+    r.rows.forEach((row,i)=>{ const c = $("estAfter"+i); if(c) c.textContent = fmt1(row.after); });
+    $("estSumBefore").textContent = fmt1(r.perTxBefore) + " min";
+    $("estSumPct").textContent = fmt0(r.pctWeighted) + " %";
+    $("estSumAfter").textContent = fmt1(r.perTxAfter) + " min";
+    const note = $("estMinNote");
+    if(note){
+      note.innerHTML = r.declaredDiff < 0.05
+        ? 'El reparto suma <b>' + fmt1(r.perTxBefore) + ' min</b>, igual a tu dato de ' + fmt0(state.declaredMin) + ' min por transacción.'
+        : '<b>Revisa el reparto:</b> suma ' + fmt1(r.perTxBefore) + ' min y tu dato es de ' + fmt0(state.declaredMin) + ' min por transacción.';
+    }
+    out.innerHTML =
+      '<div class="res res--cycle"><div class="stat">' + fmt0(r.txPedido) + ' / ' + fmt0(r.txContrato) + '</div><h3>Transacciones al año: pedido / contrato</h3><p>La ruta por pedido concentra el volumen; por eso se implementa primero.</p></div>' +
+      '<div class="res res--late"><div class="stat">' + fmt1(r.lateNow) + ' días</div><h3>De atraso hoy sobre la política</h3><p>' + fmt1(r.daysNow) + ' días a pago contra ' + fmt0(r.policy) + ' naturales desde el ingreso al Portal. Con R2P: ' + fmt1(r.lateAfter) + ' días de atraso.</p></div>' +
+      '<div class="res res--cycle"><div class="stat">' + fmt1(r.daysGained) + ' días</div><h3>Menos espera hasta el pago</h3><p>De ' + fmt1(r.daysNow) + ' a ' + fmt1(r.daysTarget) + ' días (' + fmt0(r.cyclePct) + ' % más rápido).</p></div>' +
+      '<div class="res res--cycle"><div class="stat">' + fmt1(r.waitPct) + ' %</div><h3>Del ciclo es espera, no trabajo</h3><p>' + fmt1(r.perTxBefore) + ' min de trabajo en ' + fmt1(r.daysNow) + ' días de calendario.</p></div>' +
+      '<div class="res"><div class="stat">' + fmt0(r.hoursBefore) + ' h</div><h3>Esfuerzo manual hoy, al año</h3><p>' + fmt0(r.annualTx) + ' transacciones al año × ' + fmt1(r.perTxBefore) + ' min.</p></div>' +
+      '<div class="res"><div class="stat">' + fmt0(r.hoursSaved) + ' h</div><h3>Horas liberadas al año</h3><p>Quedan ' + fmt0(r.hoursAfter) + ' h de trabajo humano (decidir, firmar, excepciones).</p></div>' +
+      '<div class="res"><div class="stat">' + fmt0(r.pctWeighted) + ' %</div><h3>Reducción de esfuerzo</h3><p>Ponderada por los minutos de cada etapa; equivale a ' + fmt1(r.fte) + ' jornadas completas.</p></div>';
+    const chk = $("estCheck");
+    if(chk){
+      let msg;
+      if(clampNum(state.people,0) <= 0){
+        msg = '<b>Comprobación de consistencia:</b> captura el número de personas para comparar el esfuerzo con su jornada.';
+      } else if(r.capacityPct < 25){
+        msg = '<b>Comprobación de consistencia:</b> con ' + fmt0(state.declaredMin) + ' minutos por transacción, el trabajo manual equivale a solo el <b>' + fmt1(r.capacityPct) + ' %</b> de la jornada anual de las ' + fmt0(state.people) +
+          ' personas (' + fmt0(state.people * state.hoursPerPerson) + ' h). Es coherente si cada una participa solo en un tramo del proceso; el resto de la carga está en esperas, seguimiento y retrabajo, que ese dato no mide. Por eso el beneficio principal no son las horas: es <b>cumplir el plazo de la política, reducir errores y ganar control</b>. Si el proceso les ocupa mucho más, mide los minutos reales en el piloto.';
+      } else {
+        msg = '<b>Comprobación de consistencia:</b> con estos tiempos el proceso consume el <b>' + fmt1(r.capacityPct) + ' %</b> de la jornada anual de las ' + fmt0(state.people) +
+          ' personas (' + fmt0(state.people * state.hoursPerPerson) + ' h): ocupa buena parte de su tiempo, así que la liberación de horas es relevante además del ciclo.';
+      }
+      chk.innerHTML = msg;
+    }
+  }
+  function setAll(){
+    inPedido.value = state.pctPedido; inTx.value = state.tx; inMonths.value = state.months; inPeople.value = state.people; inFte.value = state.hoursPerPerson;
+    inNow.value = state.daysNow; inPolicy.value = state.policy; inTarget.value = state.daysTarget;
+    buildRows(); paint();
+  }
+  body.addEventListener("input", (e)=>{
+    const t = e.target; if(!t || !t.dataset || t.dataset.i === undefined) return;
+    const i = Number(t.dataset.i), f = t.dataset.f;
+    state.stages[i][f] = clampNum(t.value, 0, f==="pct" ? 100 : undefined);
+    paint();
+  });
+  inTx.addEventListener("input", ()=>{ state.tx = clampNum(inTx.value, 0); paint(); });
+  inPedido.addEventListener("input", ()=>{ state.pctPedido = clampNum(inPedido.value, 0, 100); paint(); });
+  inMonths.addEventListener("input", ()=>{ state.months = Math.min(12, Math.max(1, clampNum(inMonths.value, 1))); paint(); });
+  inPeople.addEventListener("input", ()=>{ state.people = clampNum(inPeople.value, 0); paint(); });
+  inFte.addEventListener("input", ()=>{ state.hoursPerPerson = Math.max(1, clampNum(inFte.value, 1)); paint(); });
+  inNow.addEventListener("input", ()=>{ state.daysNow = clampNum(inNow.value, 0); paint(); });
+  inPolicy.addEventListener("input", ()=>{ state.policy = clampNum(inPolicy.value, 0); paint(); });
+  inTarget.addEventListener("input", ()=>{ state.daysTarget = clampNum(inTarget.value, 0); paint(); });
+  btnReset.addEventListener("click", ()=>{
+    const f = fresh();
+    Object.keys(f).forEach(k=>{ state[k] = f[k]; });
+    setAll();
+  });
+  setAll();
+  return { state:state, paint:paint };
+}
+
+/* ---------- Eventos ---------- */
+function bind(){
+  btnNext.addEventListener("click", ()=>goTo(FLOWS[active].current+1));
+  btnPrev.addEventListener("click", ()=>goTo(FLOWS[active].current-1));
+  btnRestart.addEventListener("click", ()=>goTo(0));
+  modalClose.addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", (e)=>{ if(e.target===modalOverlay) closeModal(); });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
+  document.addEventListener("click", (e)=>{
+    const bc = e.target.closest(".bchip");
+    if(bc){ showBenefit(bc.dataset.benefit); return; }
+    const nb = e.target.closest(".nodebtn");
+    if(nb){ jumpToNode(nb.dataset.flow, nb.dataset.node); }
+  });
+  flowTabs.addEventListener("click", (e)=>{
+    const t = e.target.closest(".ftab"); if(!t) return;
+    setFlow(t.dataset.flow);
+  });
+  filterBar.addEventListener("click", (e)=>{
+    const chip = e.target.closest(".fchip"); if(!chip) return;
+    const f = chip.dataset.filter;
+    const on = FLOWS.A.els.canvas.dataset.filter === f;
+    Object.keys(FLOWS).forEach(k=>{ FLOWS[k].els.canvas.dataset.filter = on ? "" : f; });
+    filterBar.querySelectorAll(".fchip").forEach(c=>c.setAttribute("aria-pressed", String(!on && c===chip)));
+  });
+  const links = document.querySelectorAll(".nav a");
+  const ids = ["resumen","arquitectura","flujo","fases","sap","beneficios","impacto","gobierno"];
+  if("IntersectionObserver" in window){
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(en=>{
+        if(en.isIntersecting){
+          links.forEach(a=>a.classList.toggle("is-inview", a.dataset.spy===en.target.id));
+        }
+      });
+    }, { rootMargin:"-35% 0px -55% 0px", threshold:0 });
+    ids.forEach(id=>{ const s=$(id); if(s) io.observe(s); });
+  }
+}
+
+/* ---------- Inicio ---------- */
+Object.keys(FLOWS).forEach(k => buildCanvas(FLOWS[k]));
+renderBenefits();
+bind();
+setFlow("A");
+const est = initEstimator();
+
+/* Objeto de diagnóstico para pruebas automáticas (no afecta a la página) */
+window.__R2P = { FLOWS:FLOWS, G:G, BENEFITS:BENEFITS, routesOf:routesOf, labelPos:labelPos,
+  nodeHTML:nodeHTML, estimate:estimate, EST_DEFAULTS:EST_DEFAULTS, est:est, setFlow:setFlow,
+  getActive:function(){ return active; } };
+})();
+
+</script>
+</body>
+</html>
